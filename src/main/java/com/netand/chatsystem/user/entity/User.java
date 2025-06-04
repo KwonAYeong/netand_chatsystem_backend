@@ -31,7 +31,7 @@ public class User extends BaseTimeEntity {
 
     private String company;
 
-    private String rank;
+    private String position;
 
     private boolean isActive;
 
