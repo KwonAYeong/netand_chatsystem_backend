@@ -4,7 +4,8 @@ import com.netand.chatsystem.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "chat_room")
@@ -24,4 +25,6 @@ public class ChatRoom extends BaseTimeEntity {
     @Column(nullable = false)
     private String chatRoomType;  // "DM", "GROUP"
 
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatRoomParticipant> participants = new ArrayList<>();
 }
