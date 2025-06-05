@@ -11,4 +11,7 @@ public class ChatRoomListResponseDTO {
     private String chatRoomName; // 상대방 이름
     private String chatRoomType;
     private String receiverProfileImage;
+    private String lastMessage;
+    private boolean hasUnreadMessage;
+    private int unreadMessageCount;
 }

@@ -15,7 +15,7 @@ public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
 
-    // 1:1 채팅방 생성 및 조회
+    // 1:1 채팅방 생성
     @PostMapping("/dm")
     public Long createOrGetChatRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
         return chatRoomService.createOrGetDmRoom(dto);
