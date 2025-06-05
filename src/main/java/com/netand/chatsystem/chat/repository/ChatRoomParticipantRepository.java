@@ -1,29 +1,19 @@
 package com.netand.chatsystem.chat.repository;
 
 import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
+import com.netand.chatsystem.chat.entity.ChatRoom;
 import com.netand.chatsystem.chat.entity.ChatRoomParticipant;
+import com.netand.chatsystem.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomParticipant, Long> {
 
-    @Query("""
-        SELECT new com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO(
-            cr.id,
-            otherUser.name,
-            cr.chatRoomType,
-            otherUser.profileImageUrl
-        )
-        FROM ChatRoomParticipant me
-        JOIN me.chatRoom cr
-        JOIN ChatRoomParticipant other ON other.chatRoom = cr AND other.user != me.user
-        JOIN other.user otherUser
-        WHERE me.user.id = :userId
-        AND cr.chatRoomType = 'DM'
-    """)
-    List<ChatRoomListResponseDTO> findChatRoomsByUserId(Long userId);
+    List<ChatRoomParticipant> findByUserId(Long userId);
 
+    Optional<ChatRoomParticipant> findByChatRoomAndUser(ChatRoom chatRoom, User user);
 
 }
