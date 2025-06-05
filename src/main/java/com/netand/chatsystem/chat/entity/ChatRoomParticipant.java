@@ -36,6 +36,10 @@ public class ChatRoomParticipant {
 
     private LocalDateTime updatedAt;
 
+    public void setLastReadMessage(ChatMessage lastReadMessage) {
+        this.lastReadMessage = lastReadMessage;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.joinedAt = this.updatedAt = LocalDateTime.now();

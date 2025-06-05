@@ -1,5 +1,6 @@
 package com.netand.chatsystem.chat.service;
 
+import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
 import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
 import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
 import com.netand.chatsystem.chat.entity.ChatMessage;
@@ -29,7 +30,7 @@ public class ChatRoomServiceImpl implements ChatRoomService{
     private final UserRepository userRepository;
     private final GenericParameterService parameterBuilder;
 
-    // 채팅방 생성 및 조회
+    // 채팅방 생성
     @Override
     @Transactional
     public Long createOrGetDmRoom(ChatRoomCreateRequestDTO dto) {
@@ -114,6 +115,28 @@ public class ChatRoomServiceImpl implements ChatRoomService{
                     .build();
         }).toList();
     }
+
+    // 사용자가 채팅방에 입장했을 때, 해당 채팅방의 마지막 메시지를 읽은 것으로 처리
+    @Transactional
+    @Override
+    public void updateLastReadMessage(ChatLastReadUpdateRequestDTO dto) {
+        User user = userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+        ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+
+        ChatRoomParticipant participant = chatRoomParticipantRepository
+                .findByChatRoomAndUser(chatRoom, user)
+                .orElseThrow(() -> new IllegalArgumentException("참여자를 찾을 수 없습니다."));
+
+        ChatMessage lastMessage = chatMessageRepository
+                .findTopByChatRoomOrderByCreatedAtDesc(chatRoom);
+
+        if (lastMessage != null) {
+            participant.setLastReadMessage(lastMessage);
+        }
+    }
+
 
 
 
