@@ -35,6 +35,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0' // swagger
 	implementation 'org.springframework.boot:spring-boot-starter-websocket' // WebSocket
+	implementation 'io.github.cdimascio:java-dotenv:5.2.2'// .env
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE' // AWS
+
 }
 
 tasks.named('test') {

@@ -78,4 +78,24 @@ public class ChatMessageServiceImpl implements ChatMessageService{
                         .build())
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public void saveFileMessage(Long chatRoomId, Long senderId, String fileUrl) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방 없음"));
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
+
+        ChatMessage message = ChatMessage.builder()
+                .chatRoom(chatRoom)
+                .sender(sender)
+                .content(fileUrl)
+                .fileUrl(fileUrl)
+                .messageType("FILE")
+                .build();
+
+        chatMessageRepository.save(message);
+    }
+
 }
