@@ -26,16 +26,23 @@ public class NotificationSetting extends BaseTimeEntity {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id", nullable = false)
+    @JoinColumn(name = "chat_room_id")
     private ChatRoom chatRoom;
 
     @Column(name = "alert_type", nullable = false)
     private String alertType;
 
+    @Builder.Default
     @Column(name = "notification_start_time")
-    private LocalTime notificationStartTime;
+    private LocalTime notificationStartTime = LocalTime.of(8,0);
 
+    @Builder.Default
     @Column(name = "notification_end_time")
-    private LocalTime notificationEndTime;
+    private LocalTime notificationEndTime = LocalTime.of(22,0);
+
+    //==수신 유형 변경==//
+    public void updateAlertType(String alertType) {
+        this.alertType = alertType;
+    }
 
 }

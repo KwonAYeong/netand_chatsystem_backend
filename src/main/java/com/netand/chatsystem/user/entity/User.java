@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -28,7 +28,7 @@ public class User extends BaseTimeEntity {
 
     private String company;
 
-    private String rank;
+    private String position;
 
     private boolean isActive;
 
