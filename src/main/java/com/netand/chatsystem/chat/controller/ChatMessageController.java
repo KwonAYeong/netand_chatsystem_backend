@@ -6,9 +6,15 @@ import com.netand.chatsystem.chat.dto.ChatMessageResponseDTO;
 import com.netand.chatsystem.chat.service.ChatMessageService;
 import com.netand.chatsystem.common.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 @RestController
@@ -42,5 +48,24 @@ public class ChatMessageController {
         chatMessageService.saveFileMessage(dto.getChatRoomId(), dto.getSenderId(), fileUrl);
         return ResponseEntity.ok(fileUrl);
     }
+
+    @GetMapping("/file/download")
+    public ResponseEntity<Resource> downloadFile(@RequestParam String fileUrl) {
+        try {
+            URL url = new URL(fileUrl); // S3 URL로 부터 스트림 열기
+            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1); // 파일 이름 추출
+
+            Resource resource = new InputStreamResource(url.openStream());
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+
+        } catch (IOException e) {
+            throw new RuntimeException("파일 다운로드 실패", e);
+        }
+    }
+
 
 }
