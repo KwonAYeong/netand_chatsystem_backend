@@ -1,8 +1,12 @@
 package com.netand.chatsystem.user.entity;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.netand.chatsystem.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "users")
