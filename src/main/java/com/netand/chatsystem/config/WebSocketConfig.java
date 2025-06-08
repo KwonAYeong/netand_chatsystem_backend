@@ -23,7 +23,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // 메세지를 받을 prefix -> /sub/chatroom/1
-        registry.enableSimpleBroker("/sub");
+        registry.enableSimpleBroker("/sub", "/user");
 
         // 메세지를 보낼 prefix -> /pub/send
         registry.setApplicationDestinationPrefixes("/pub");

@@ -40,4 +40,30 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
             notificationSettingRepository.save(setting);
         }
     }
+
+    // 알림 설정 여부 확인
+    @Override
+    public boolean isNotificationEnabled(Long userId, Long chatRoomId) {
+        Optional<NotificationSetting> globalSetting =
+                notificationSettingRepository.findByUserIdAndChatRoomIdIsNull(userId);
+
+        return globalSetting
+                .map(setting -> !"NONE".equalsIgnoreCase(setting.getAlertType()))
+                .orElse(true); // 설정 없으면 기본값은 알림 허용
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

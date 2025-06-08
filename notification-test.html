@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>WebSocket 알림 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>✅ WebSocket 알림 수신 테스트</h2>
+<p>아래 메시지가 실시간으로 출력됩니다 (알림 설정이 ON일 때만 수신)</p>
+<div id="log" style="border: 1px solid gray; padding: 10px; margin-top: 10px; height: 200px; overflow-y: scroll;"></div>
+
+<script>
+    const socket = new SockJS("http://localhost:8080/ws"); // 너희 Spring 서버 WebSocket endpoint
+    const stompClient = Stomp.over(socket);
+
+    // 테스트할 사용자 ID (서버에서 이 ID 기준으로 메시지를 전송한다고 가정)
+    const userId = 2;
+
+    stompClient.connect({}, function (frame) {
+      console.log("🔌 연결됨:", frame);
+
+      // 개별 알림 구독 경로 (/user/queue/chat)
+      stompClient.subscribe("/user/queue/chat", function (message) {
+        const body = JSON.parse(message.body);
+        document.getElementById("log").innerHTML += `<p>📨 메시지 도착: ${body.content}</p>`;
+      });
+
+      // 메시지 수동 전송 (테스트용)
+      const messageDto = {
+        senderId: 1,
+        chatRoomId: 5,
+        content: "🌟 알림 테스트 메시지입니다",
+        messageType: "TEXT"
+      };
+
+      stompClient.send("/pub/chat.sendMessage", {}, JSON.stringify(messageDto));
+    });
+</script>
+</body>
+</html>
