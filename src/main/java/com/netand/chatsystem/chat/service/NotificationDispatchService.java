@@ -30,14 +30,17 @@ public class NotificationDispatchService {
             // 발신자는 제외
             if (receiverId.equals(senderId)) continue;
 
-            // 전체 알림 설정 확인 (alertType == "NONE" 이면 전송 안 함)
-            boolean enabled = notificationSettingService.isNotificationEnabled(senderId, chatRoomId);
+
+            // 알림 설정 확인
+            boolean enabled = notificationSettingService
+                    .isNotificationEnabled(participant.getUser(), chatRoomId, messageDto.getContent());
 
             if (enabled) {
                 messagingTemplate.convertAndSendToUser(
                         receiverId.toString(),
                         "/queue/chat",
                         messageDto
+
                 );
             }
         }

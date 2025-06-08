@@ -45,4 +45,10 @@ public class NotificationSetting extends BaseTimeEntity {
         this.alertType = alertType;
     }
 
+    //==알림 수신 시간 변경==//
+    public void updateNotificationTime(LocalTime notificationStartTime, LocalTime notificationEndTime) {
+        this.notificationStartTime = notificationStartTime;
+        this.notificationEndTime = notificationEndTime;
+    }
+
 }
