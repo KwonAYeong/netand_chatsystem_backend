@@ -11,6 +11,6 @@ public interface ChatMessageService {
 
     List<ChatMessageResponseDTO> getMessagesByChatRoomId(Long chatRoomId);
 
-    public void saveFileMessage(Long chatRoomId, Long senderId, String fileUrl);
+    ChatMessageResponseDTO saveFileMessage(Long chatRoomId, Long senderId, String fileUrl);
 
 }

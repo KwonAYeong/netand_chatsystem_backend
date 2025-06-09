@@ -41,13 +41,17 @@ public class ChatMessageController {
 
     // 파일 첨부 채팅 메세지 전송
     @PostMapping("/file")
-    public ResponseEntity<String> sendFileMessage(
+    public ResponseEntity<ChatMessageResponseDTO> sendFileMessage(
             @ModelAttribute ChatMessageFileRequestDTO dto
     ) {
         String fileUrl = s3Uploader.uploadFile(dto.getFile(), "chat");
-        chatMessageService.saveFileMessage(dto.getChatRoomId(), dto.getSenderId(), fileUrl);
-        return ResponseEntity.ok(fileUrl);
+
+        ChatMessageResponseDTO responseDto =
+                chatMessageService.saveFileMessage(dto.getChatRoomId(), dto.getSenderId(), fileUrl);
+
+        return ResponseEntity.ok(responseDto);
     }
+
 
     @GetMapping("/file/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam String fileUrl) {
