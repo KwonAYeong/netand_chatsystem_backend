@@ -28,6 +28,7 @@ public class ChatMessageServiceImpl implements ChatMessageService{
     @Override
     @Transactional
     public ChatMessageResponseDTO sendMessage(ChatMessageRequestDTO dto) {
+
         ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
@@ -81,21 +82,23 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 
     @Override
     @Transactional
-    public void saveFileMessage(Long chatRoomId, Long senderId, String fileUrl) {
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방 없음"));
+    public ChatMessageResponseDTO saveFileMessage(Long chatRoomId, Long senderId, String fileUrl) {
         User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
+                .orElseThrow(() -> new IllegalArgumentException("유저가 존재하지 않습니다."));
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
         ChatMessage message = ChatMessage.builder()
                 .chatRoom(chatRoom)
                 .sender(sender)
-                .content(fileUrl)
-                .fileUrl(fileUrl)
                 .messageType("FILE")
+                .content(fileUrl)
                 .build();
 
         chatMessageRepository.save(message);
+
+        return ChatMessageResponseDTO.from(message);
     }
+
 
 }

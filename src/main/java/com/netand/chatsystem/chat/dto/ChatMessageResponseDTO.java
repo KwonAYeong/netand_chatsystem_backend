@@ -1,5 +1,6 @@
 package com.netand.chatsystem.chat.dto;
 
+import com.netand.chatsystem.chat.entity.ChatMessage;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,4 +19,17 @@ public class ChatMessageResponseDTO {
     private String messageType;
     private String fileUrl;
     private LocalDateTime createdAt;
+
+    public static ChatMessageResponseDTO from(ChatMessage message) {
+        return ChatMessageResponseDTO.builder()
+                .messageId(message.getId())
+                .chatRoomId(message.getChatRoom().getId())
+                .senderId(message.getSender().getId())
+                .senderName(message.getSender().getName())
+                .senderProfileImage(message.getSender().getProfileImageUrl())
+                .content(message.getContent())
+                .messageType(message.getMessageType())
+                .createdAt(message.getCreatedAt())
+                .build();
+    }
 }
