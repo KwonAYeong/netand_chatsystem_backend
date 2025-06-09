@@ -92,7 +92,8 @@ public class ChatMessageServiceImpl implements ChatMessageService{
                 .chatRoom(chatRoom)
                 .sender(sender)
                 .messageType("FILE")
-                .content(fileUrl)
+                .fileUrl(fileUrl)
+                .content("")
                 .build();
 
         chatMessageRepository.save(message);
