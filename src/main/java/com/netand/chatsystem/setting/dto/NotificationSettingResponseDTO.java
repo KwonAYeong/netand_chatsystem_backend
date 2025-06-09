@@ -13,7 +13,6 @@ import java.time.LocalTime;
 @Builder
 public class NotificationSettingResponseDTO {
     private boolean isMuteAll;
-    private boolean isMentionOnly;
     private LocalTime notificationStartTime;
     private LocalTime notificationEndTime;
 }
