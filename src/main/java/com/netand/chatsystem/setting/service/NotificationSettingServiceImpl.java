@@ -53,22 +53,26 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
     // 전체 알림 설정
     @Override
     @Transactional
-    public void updateGlobalNotification(GlobalAlertTypeRequestDTO dto) {
+    public NotificationSettingResponseDTO updateGlobalNotification(GlobalAlertTypeRequestDTO dto) {
         NotificationSetting setting = notificationSettingRepository
                 .findByUserIdAndChatRoomIdIsNull(dto.getUserId())
                 .orElseThrow(() -> new IllegalStateException("알림 설정이 존재하지 않습니다."));
 
         setting.updateAlertType(dto.getAlertType());
+
+        return NotificationSettingResponseDTO.from(setting);
     }
 
 
     // 알림 수신 시간 변경
-    public void updateNotificationTime(NotificationTimeSettingRequestDTO dto) {
+    public NotificationSettingResponseDTO updateNotificationTime(NotificationTimeSettingRequestDTO dto) {
         NotificationSetting setting = notificationSettingRepository
                 .findByUserIdAndChatRoomIdIsNull(dto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("알림 설정이 없습니다."));
 
-        setting.updateNotificationTime(dto.getNotificationStartTime(), dto.getNotificationStartTime());
+        setting.updateNotificationTime(dto.getNotificationStartTime(), dto.getNotificationEndTime());
+
+        return NotificationSettingResponseDTO.from(setting);
     }
 
 
