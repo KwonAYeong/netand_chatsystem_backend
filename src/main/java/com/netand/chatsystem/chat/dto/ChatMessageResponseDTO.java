@@ -29,6 +29,7 @@ public class ChatMessageResponseDTO {
                 .senderProfileImage(message.getSender().getProfileImageUrl())
                 .content(message.getContent())
                 .messageType(message.getMessageType())
+                .fileUrl(message.getFileUrl())
                 .createdAt(message.getCreatedAt())
                 .build();
     }
