@@ -18,10 +18,7 @@ public class ChatWebSocketController {
         // 1. 메시지 저장
         ChatMessageResponseDTO savedMessage = chatMessageService.sendMessage(dto);
 
-        // 2. /topic/chatroom/{chatRoomId} 구독자에게 메시지 전송Add commentMore actions
-        messagingTemplate.convertAndSend(
-                "/topic/chatroom/" + dto.getChatRoomId(),
-                savedMessage
-        );
+        //2. 실시간 전송
+        messagingTemplate.convertAndSend("/sub/chatroom/" + dto.getChatRoomId(), savedMessage);
     }
 }
