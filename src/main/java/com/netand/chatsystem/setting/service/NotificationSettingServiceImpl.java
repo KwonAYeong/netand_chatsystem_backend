@@ -45,7 +45,6 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
 
         return NotificationSettingResponseDTO.builder()
                 .isMuteAll("NONE".equals(setting.getAlertType()))
-                .isMentionOnly("MENTION_ONLY".equals(setting.getAlertType()))
                 .notificationStartTime(setting.getNotificationStartTime())
                 .notificationEndTime(setting.getNotificationEndTime())
                 .build();
@@ -69,7 +68,7 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
                 .findByUserIdAndChatRoomIdIsNull(dto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("알림 설정이 없습니다."));
 
-        setting.updateNotificationTime(dto.getStartTime(), dto.getEndTime());
+        setting.updateNotificationTime(dto.getNotificationStartTime(), dto.getNotificationStartTime());
     }
 
 
