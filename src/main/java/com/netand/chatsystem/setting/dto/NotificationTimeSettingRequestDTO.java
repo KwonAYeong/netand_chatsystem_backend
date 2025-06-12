@@ -7,6 +7,6 @@ import java.time.LocalTime;
 @Getter
 public class NotificationTimeSettingRequestDTO {
     private Long userId;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private LocalTime notificationStartTime;
+    private LocalTime notificationEndTime;
 }

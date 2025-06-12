@@ -6,9 +6,12 @@ import com.netand.chatsystem.chat.entity.ChatMessage;
 import com.netand.chatsystem.chat.entity.ChatRoom;
 import com.netand.chatsystem.chat.repository.ChatMessageRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomRepository;
+import com.netand.chatsystem.notification.service.NotificationDispatchService;
+import com.netand.chatsystem.notification.service.NotificationService;
 import com.netand.chatsystem.user.entity.User;
 import com.netand.chatsystem.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +26,12 @@ public class ChatMessageServiceImpl implements ChatMessageService{
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
+    private final NotificationDispatchService notificationDispatchService;
 
     // 메세지 전송
     @Override
     @Transactional
     public ChatMessageResponseDTO sendMessage(ChatMessageRequestDTO dto) {
-
         ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
@@ -45,7 +48,8 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 
         chatMessageRepository.save(message);
 
-        return ChatMessageResponseDTO.builder()
+        // 응답 DTO 구성
+        ChatMessageResponseDTO response = ChatMessageResponseDTO.builder()
                 .messageId(message.getId())
                 .chatRoomId(chatRoom.getId())
                 .senderId(sender.getId())
@@ -56,6 +60,11 @@ public class ChatMessageServiceImpl implements ChatMessageService{
                 .fileUrl(message.getFileUrl())
                 .createdAt(message.getCreatedAt())
                 .build();
+
+        // SSE 알림 전송
+        notificationDispatchService.sendChatNotification(response, chatRoom.getId(), sender.getId());
+
+        return response;
     }
 
     // 채팅 메세지 목록 조회
