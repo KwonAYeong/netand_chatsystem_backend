@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/chat/message")
@@ -39,20 +41,20 @@ public class ChatMessageController {
         return ResponseEntity.ok(messages);
     }
 
-    // 파일 첨부 채팅 메세지 전송
+    // 파일 전송
     @PostMapping("/file")
-    public ResponseEntity<ChatMessageResponseDTO> sendFileMessage(
+    public ResponseEntity<Map<String, String>> uploadFileOnly(
             @ModelAttribute ChatMessageFileRequestDTO dto
     ) {
         String fileUrl = s3Uploader.uploadFile(dto.getFile(), "chat");
 
-        ChatMessageResponseDTO responseDto =
-                chatMessageService.saveFileMessage(dto.getChatRoomId(), dto.getSenderId(), fileUrl);
+        Map<String, String> response = new HashMap<>();
+        response.put("fileUrl", fileUrl);
 
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(response);
     }
 
-
+    // 파일 다운로드
     @GetMapping("/file/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam String fileUrl) {
         try {
