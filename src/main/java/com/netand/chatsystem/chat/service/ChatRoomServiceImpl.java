@@ -11,9 +11,7 @@ import com.netand.chatsystem.chat.repository.ChatRoomParticipantRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomRepository;
 import com.netand.chatsystem.user.entity.User;
 import com.netand.chatsystem.user.repository.UserRepository;
-import io.swagger.v3.oas.annotations.servers.Server;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.service.GenericParameterService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +20,12 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ChatRoomServiceImpl implements ChatRoomService{
+public class ChatRoomServiceImpl implements ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final UserRepository userRepository;
-    private final GenericParameterService parameterBuilder;
 
     // 채팅방 생성
     @Override
@@ -55,22 +52,29 @@ public class ChatRoomServiceImpl implements ChatRoomService{
                 .build();
         chatRoomRepository.save(chatRoom);
 
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder()
-                .chatRoom(chatRoom)
-                .user(sender)
-                .joinedAt(LocalDateTime.now())
-                .build());
-
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder()
-                .chatRoom(chatRoom)
-                .user(receiver)
-                .joinedAt(LocalDateTime.now())
-                .build());
+        // sender/receiver 동시에 insert 막기 위한 락 + 조건 분기
+        saveParticipantIfNotExists(chatRoom, sender);
+        saveParticipantIfNotExists(chatRoom, receiver);
 
         return chatRoom.getId();
     }
 
-    // 채팅방 목록 조회
+    private void saveParticipantIfNotExists(ChatRoom chatRoom, User user) {
+        boolean exists = chatRoomParticipantRepository
+                .findWithLockByChatRoomIdAndUserId(chatRoom.getId(), user.getId())
+                .isPresent();
+
+        if (!exists) {
+            chatRoomParticipantRepository.save(
+                    ChatRoomParticipant.builder()
+                            .chatRoom(chatRoom)
+                            .user(user)
+                            .joinedAt(LocalDateTime.now())
+                            .build()
+            );
+        }
+    }
+
     @Override
     @Transactional
     public List<ChatRoomListResponseDTO> getDmRoomsByUserId(Long userId) {
@@ -79,29 +83,21 @@ public class ChatRoomServiceImpl implements ChatRoomService{
         return participants.stream().map(participant -> {
             ChatRoom chatRoom = participant.getChatRoom();
 
-            // 상대방 찾기
             User opponent = chatRoom.getParticipants().stream()
                     .map(ChatRoomParticipant::getUser)
                     .filter(user -> !user.getId().equals(userId))
                     .findFirst()
                     .orElseThrow();
 
-            // 가장 최근 메시지
             ChatMessage lastMessage = chatMessageRepository
                     .findTopByChatRoomOrderByCreatedAtDesc(chatRoom);
 
-            if (lastMessage != null) {}
-
-            // 마지막 읽은 메시지 ID
             Long lastReadId = participant.getLastReadMessage() != null
                     ? participant.getLastReadMessage().getId()
                     : 0L;
 
-            // 읽지 않은 메세지 수 계산
-            User me = participant.getUser();
-
             int unreadCount = lastMessage != null
-                    ? chatMessageRepository.countByChatRoomAndIdGreaterThanAndSenderNot(chatRoom, lastReadId, me)
+                    ? chatMessageRepository.countByChatRoomAndIdGreaterThanAndSenderNot(chatRoom, lastReadId, participant.getUser())
                     : 0;
 
             return ChatRoomListResponseDTO.builder()
@@ -116,9 +112,8 @@ public class ChatRoomServiceImpl implements ChatRoomService{
         }).toList();
     }
 
-    // 사용자가 채팅방에 입장했을 때, 해당 채팅방의 마지막 메시지를 읽은 것으로 처리
-    @Transactional
     @Override
+    @Transactional
     public void updateLastReadMessage(ChatLastReadUpdateRequestDTO dto) {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
@@ -126,18 +121,17 @@ public class ChatRoomServiceImpl implements ChatRoomService{
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
         ChatRoomParticipant participant = chatRoomParticipantRepository
-                .findByChatRoomAndUser(chatRoom, user)
+                .findWithLockByChatRoomIdAndUserId(chatRoom.getId(), user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("참여자를 찾을 수 없습니다."));
 
         ChatMessage lastMessage = chatMessageRepository
                 .findTopByChatRoomOrderByCreatedAtDesc(chatRoom);
 
         if (lastMessage != null) {
-            participant.setLastReadMessage(lastMessage);
+            ChatMessage current = participant.getLastReadMessage();
+            if (current == null || current.getId() < lastMessage.getId()) {
+                participant.setLastReadMessage(lastMessage);
+            }
         }
     }
-
-
-
-
 }
