@@ -2,9 +2,12 @@ package com.netand.chatsystem.chat.service;
 
 import com.netand.chatsystem.chat.dto.ChatMessageRequestDTO;
 import com.netand.chatsystem.chat.dto.ChatMessageResponseDTO;
+import com.netand.chatsystem.chat.dto.UnreadCountDTO;
 import com.netand.chatsystem.chat.entity.ChatMessage;
 import com.netand.chatsystem.chat.entity.ChatRoom;
+import com.netand.chatsystem.chat.entity.ChatRoomParticipant;
 import com.netand.chatsystem.chat.repository.ChatMessageRepository;
+import com.netand.chatsystem.chat.repository.ChatRoomParticipantRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomRepository;
 import com.netand.chatsystem.notification.service.NotificationDispatchService;
 import com.netand.chatsystem.notification.service.NotificationService;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +29,7 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final UserRepository userRepository;
     private final NotificationDispatchService notificationDispatchService;
 
@@ -48,7 +53,6 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 
         chatMessageRepository.save(message);
 
-        // 응답 DTO 구성
         ChatMessageResponseDTO response = ChatMessageResponseDTO.builder()
                 .messageId(message.getId())
                 .chatRoomId(chatRoom.getId())
@@ -110,5 +114,36 @@ public class ChatMessageServiceImpl implements ChatMessageService{
         return ChatMessageResponseDTO.from(message);
     }
 
+    @Override
+    public List<UnreadCountDTO> getUnreadCounts(ChatMessage message) {
+        Long chatRoomId = message.getChatRoom().getId();
+        Long messageId = message.getId();
+
+        List<ChatRoomParticipant> participants =
+                chatRoomParticipantRepository.findByChatRoomId(chatRoomId);
+
+        List<UnreadCountDTO> unreadCounts = new ArrayList<>();
+
+        for (ChatRoomParticipant participant : participants) {
+            Long participantId = participant.getUser().getId();
+
+            if (!participantId.equals(message.getSender().getId())) {
+
+                ChatMessage lastReadMessage = participant.getLastReadMessage();
+                Long lastReadMessageId = (lastReadMessage != null) ? lastReadMessage.getId() : null;
+
+                Long count;
+                if (lastReadMessageId == null) {
+                    count = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(chatRoomId, 0L);
+                } else {
+                    count = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(chatRoomId, lastReadMessageId);
+                }
+
+                unreadCounts.add(new UnreadCountDTO(chatRoomId, participantId, count));
+            }
+        }
+
+        return unreadCounts;
+    }
 
 }
