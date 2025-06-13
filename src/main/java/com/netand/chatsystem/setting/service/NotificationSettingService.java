@@ -8,6 +8,5 @@ import com.netand.chatsystem.user.entity.User;
 public interface NotificationSettingService {
     NotificationSettingResponseDTO updateGlobalNotification(GlobalAlertTypeRequestDTO dto);
     NotificationSettingResponseDTO updateNotificationTime(NotificationTimeSettingRequestDTO dto);
-    boolean isNotificationEnabled(User user, Long chatRoomId, String content);
     NotificationSettingResponseDTO getNotificationSetting(Long userId);
 }
