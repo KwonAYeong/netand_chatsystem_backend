@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,11 +44,7 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
                     return notificationSettingRepository.save(defaultSetting);
                 });
 
-        return NotificationSettingResponseDTO.builder()
-                .isMuteAll("NONE".equals(setting.getAlertType()))
-                .notificationStartTime(setting.getNotificationStartTime())
-                .notificationEndTime(setting.getNotificationEndTime())
-                .build();
+        return buildNotificationResponse(userId);
     }
 
     // 전체 알림 설정
@@ -60,7 +57,7 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
 
         setting.updateAlertType(dto.getAlertType());
 
-        return NotificationSettingResponseDTO.from(setting);
+        return buildNotificationResponse(dto.getUserId());
     }
 
 
@@ -72,40 +69,39 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
 
         setting.updateNotificationTime(dto.getNotificationStartTime(), dto.getNotificationEndTime());
 
-        return NotificationSettingResponseDTO.from(setting);
+        return buildNotificationResponse(dto.getUserId());
     }
 
 
-    // 알림 설정 여부 확인
-    @Override
-    public boolean isNotificationEnabled(User user, Long chatRoomId, String content) {
-        NotificationSetting setting =
-                notificationSettingRepository.findByUserIdAndChatRoomIdIsNull(user.getId())
-                        .orElse(null);
 
-        if (setting == null || "NONE".equals(setting.getAlertType())) {
-            return false;
-        }
+    //==공통 알림 응답 생성 메서드==//
+    private NotificationSettingResponseDTO buildNotificationResponse(Long userId) {
+        List<NotificationSetting> settings = notificationSettingRepository.findAllByUserId(userId);
 
-        // 시간 조건 검사
-        LocalTime now = LocalTime.now();
-        boolean isInTimeRange =
-                !now.isBefore(setting.getNotificationStartTime()) &&
-                        !now.isAfter(setting.getNotificationEndTime());
+        NotificationSetting globalSetting = settings.stream()
+                .filter(s -> s.getChatRoom() == null)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("전체 알림 설정이 존재하지 않습니다."));
 
-        if (!isInTimeRange) return false;
+        List<Long> receiveMentionOnly = settings.stream()
+                .filter(s -> s.getChatRoom() != null && "MENTION_ONLY".equals(s.getAlertType()))
+                .map(s -> s.getChatRoom().getId())
+                .toList();
 
-        // ALL이면 무조건 허용
-        if ("ALL".equals(setting.getAlertType())) {
-            return true;
-        }
+        List<Long> mutedChatRoomIds = settings.stream()
+                .filter(s -> s.getChatRoom() != null && "NONE".equals(s.getAlertType()))
+                .map(s -> s.getChatRoom().getId())
+                .toList();
 
-        if ("MENTION_ONLY".equals(setting.getAlertType())) {
-            return content.contains("@" + user.getName());
-        }
-
-        return false;
+        return NotificationSettingResponseDTO.builder()
+                .isMuteAll("NONE".equals(globalSetting.getAlertType()))
+                .notificationStartTime(globalSetting.getNotificationStartTime())
+                .notificationEndTime(globalSetting.getNotificationEndTime())
+                .receiveMentionOnly(receiveMentionOnly)
+                .mutedChatRoomIds(mutedChatRoomIds)
+                .build();
     }
+
 
 
 
