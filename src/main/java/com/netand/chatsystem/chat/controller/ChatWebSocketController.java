@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import java.util.Map;
+import java.util.HashMap;
+
+
 @RestController
 @RequiredArgsConstructor
 public class ChatWebSocketController {
@@ -41,8 +45,14 @@ public class ChatWebSocketController {
         List<UnreadCountDTO> unreadCounts = chatMessageService.getUnreadCounts(chatMessage);
 
         for (UnreadCountDTO unread : unreadCounts) {
-            messagingTemplate.convertAndSend("/sub/unread/" + unread.getUserId(), unread);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("chatRoomId", unread.getChatRoomId());
+            payload.put("userId", unread.getUserId());
+            payload.put("unreadMessageCount", unread.getUnreadCount());
+
+            messagingTemplate.convertAndSend("/sub/unread/" + unread.getUserId(), payload);
         }
+
     }
 
 }
