@@ -35,9 +35,6 @@ public class ChatWebSocketController {
         // 실시간 메시지 전송
         messagingTemplate.convertAndSend("/sub/chatroom/" + dto.getChatRoomId(), savedMessage);
 
-        // 알림 전송
-        notificationDispatchService.sendChatNotification(savedMessage, dto.getChatRoomId(), dto.getSenderId());
-
         // unreadCount 계산 및 전송
         ChatMessage chatMessage = chatMessageRepository.findById(savedMessage.getMessageId())
                 .orElseThrow(() -> new RuntimeException("채팅 메시지를 찾을 수 없습니다."));
