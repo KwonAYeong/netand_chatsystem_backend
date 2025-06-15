@@ -18,8 +18,7 @@ public class S3Uploader {
 
     public String uploadFile(MultipartFile file, String dirName) {
         String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        String fileName = dirName + "/" + UUID.randomUUID() + fileExtension;
+        String fileName = dirName + "/" + originalFilename;
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(file.getSize());
