@@ -29,8 +29,9 @@ public class NotificationSetting extends BaseTimeEntity {
     @JoinColumn(name = "chat_room_id")
     private ChatRoom chatRoom;
 
-    /*
-       types: 'ALL', 'MENTION_ONLY', 'NONE'
+    /**
+       알림 유형들:
+       'ALL', 'MENTION_ONLY', 'NONE'
      */
     @Column(name = "alert_type", nullable = false)
     private String alertType;

@@ -9,6 +9,8 @@ import com.netand.chatsystem.chat.entity.ChatRoomParticipant;
 import com.netand.chatsystem.chat.repository.ChatMessageRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomParticipantRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomRepository;
+import com.netand.chatsystem.setting.entity.NotificationSetting;
+import com.netand.chatsystem.setting.repository.NotificationSettingRepository;
 import com.netand.chatsystem.user.entity.User;
 import com.netand.chatsystem.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -26,6 +29,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final UserRepository userRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
 
     // 채팅방 생성
     @Override
@@ -56,24 +60,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         saveParticipantIfNotExists(chatRoom, sender);
         saveParticipantIfNotExists(chatRoom, receiver);
 
+        // 채팅방 알림설정 엔터티 생성
+        createChatRoomNotifySetting(sender, chatRoom);
+        createChatRoomNotifySetting(receiver, chatRoom);
+
         return chatRoom.getId();
     }
 
-    private void saveParticipantIfNotExists(ChatRoom chatRoom, User user) {
-        boolean exists = chatRoomParticipantRepository
-                .findWithLockByChatRoomIdAndUserId(chatRoom.getId(), user.getId())
-                .isPresent();
-
-        if (!exists) {
-            chatRoomParticipantRepository.save(
-                    ChatRoomParticipant.builder()
-                            .chatRoom(chatRoom)
-                            .user(user)
-                            .joinedAt(LocalDateTime.now())
-                            .build()
-            );
-        }
-    }
 
     @Override
     @Transactional
@@ -134,4 +127,34 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             }
         }
     }
+
+
+    private void createChatRoomNotifySetting(User participantUser, ChatRoom chatRoom) {
+        NotificationSetting chatRoomNotifySetting = NotificationSetting.builder()
+                .user(participantUser)
+                .chatRoom(chatRoom)
+                .alertType("ALL")
+                .notificationStartTime(LocalTime.of(8, 0))
+                .notificationEndTime(LocalTime.of(22, 0))
+                .build();
+        notificationSettingRepository.save(chatRoomNotifySetting);
+    }
+
+    private void saveParticipantIfNotExists(ChatRoom chatRoom, User user) {
+        boolean exists = chatRoomParticipantRepository
+                .findWithLockByChatRoomIdAndUserId(chatRoom.getId(), user.getId())
+                .isPresent();
+
+        if (!exists) {
+            chatRoomParticipantRepository.save(
+                    ChatRoomParticipant.builder()
+                            .chatRoom(chatRoom)
+                            .user(user)
+                            .joinedAt(LocalDateTime.now())
+                            .build()
+            );
+        }
+    }
+
+
 }
