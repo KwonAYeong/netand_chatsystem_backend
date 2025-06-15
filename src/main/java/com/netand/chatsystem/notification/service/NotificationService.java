@@ -54,8 +54,6 @@ public class NotificationService {
     }
 
 
-
-
     // 유저별로 emitter 고유 식별자 생성
     private String generateEmitterId(Long userId) {
         return userId + "_" + UUID.randomUUID();

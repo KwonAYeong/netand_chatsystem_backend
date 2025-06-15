@@ -1,8 +1,6 @@
 package com.netand.chatsystem.setting.service;
 
-import com.netand.chatsystem.setting.dto.GlobalAlertTypeRequestDTO;
-import com.netand.chatsystem.setting.dto.NotificationSettingResponseDTO;
-import com.netand.chatsystem.setting.dto.NotificationTimeSettingRequestDTO;
+import com.netand.chatsystem.setting.dto.*;
 import com.netand.chatsystem.setting.entity.NotificationSetting;
 import com.netand.chatsystem.setting.repository.NotificationSettingRepository;
 import com.netand.chatsystem.user.entity.User;
@@ -72,6 +70,26 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
         return buildNotificationResponse(dto.getUserId());
     }
 
+    // 채팅방 알림 설정 정보 가져오기
+    public RoomNotifySetResponseDTO getRoomNotifySetting(Long userId, Long chatRoomId) {
+        NotificationSetting setting = notificationSettingRepository.findByUserIdAndChatRoomId(userId, chatRoomId)
+                .orElseThrow(() -> new IllegalStateException("알림 설정이 존재하지 않습니다."));
+
+        return RoomNotifySetResponseDTO.builder()
+                .alertType(setting.getAlertType())
+                .build();
+    }
+
+    // 채팅방 알림 설정 변경
+    public NotificationSettingResponseDTO updateChatRoomNotification(RoomNotifySetRequestDTO dto) {
+        NotificationSetting setting = notificationSettingRepository
+                .findByUserIdAndChatRoomId(dto.getUserId(), dto.getChatRoomId())
+                .orElseThrow(() -> new IllegalStateException("알림 설정이 존재하지 않습니다."));
+
+        setting.updateAlertType(dto.getAlertType());
+
+        return buildNotificationResponse(dto.getUserId());
+    }
 
 
     //==공통 알림 응답 생성 메서드==//
