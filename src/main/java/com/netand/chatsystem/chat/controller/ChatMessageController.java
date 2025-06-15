@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,11 @@ public class ChatMessageController {
     public ResponseEntity<Map<String, String>> uploadFileOnly(
             @ModelAttribute ChatMessageFileRequestDTO dto
     ) {
-        String fileUrl = s3Uploader.uploadFile(dto.getFile(), "chat");
+        String today = LocalDate.now().toString();
+        String dirName = "chat/" + today;
+
+        // 원본 파일명 그대로 업로드
+        String fileUrl = s3Uploader.uploadFile(dto.getFile(), dirName);
 
         Map<String, String> response = new HashMap<>();
         response.put("fileUrl", fileUrl);
