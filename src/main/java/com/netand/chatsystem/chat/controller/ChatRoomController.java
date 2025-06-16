@@ -2,6 +2,7 @@ package com.netand.chatsystem.chat.controller;
 
 import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
 import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
+import com.netand.chatsystem.chat.dto.ChatRoomCreateResponseDTO;
 import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
 import com.netand.chatsystem.chat.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,9 @@ public class ChatRoomController {
 
     // 1:1 채팅방 생성
     @PostMapping("/dm")
-    public Long createOrGetChatRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
-        return chatRoomService.createOrGetDmRoom(dto);
+    public ResponseEntity<ChatRoomCreateResponseDTO> createOrGetChatRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
+        ChatRoomCreateResponseDTO response = chatRoomService.createOrGetDmRoom(dto);
+        return ResponseEntity.ok(response);
     }
 
     // 현재 유저 기준 참여한 DM 목록 조회
