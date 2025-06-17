@@ -1,8 +1,6 @@
 package com.netand.chatsystem.chat.service;
 
-import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
+import com.netand.chatsystem.chat.dto.*;
 
 import java.util.List;
 
@@ -13,5 +11,7 @@ public interface ChatRoomService {
     List<ChatRoomListResponseDTO> getDmRoomsByUserId(Long userId);
 
     void updateLastReadMessage(ChatLastReadUpdateRequestDTO dto);
+
+    GroupChatCreateResponseDTO createGroupChatRoom(GroupChatCreateRequestDTO dto);
 
 }

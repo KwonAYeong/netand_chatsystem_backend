@@ -1,8 +1,6 @@
 package com.netand.chatsystem.chat.service;
 
-import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
+import com.netand.chatsystem.chat.dto.*;
 import com.netand.chatsystem.chat.entity.ChatMessage;
 import com.netand.chatsystem.chat.entity.ChatRoom;
 import com.netand.chatsystem.chat.entity.ChatRoomParticipant;
@@ -19,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final UserRepository userRepository;
     private final NotificationSettingRepository notificationSettingRepository;
 
-    // 채팅방 생성
+    // 1:1 채팅방 생성
     @Override
     @Transactional
     public Long createOrGetDmRoom(ChatRoomCreateRequestDTO dto) {
@@ -67,6 +67,42 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return chatRoom.getId();
     }
 
+    // 그룹 채팅방 생성
+    @Override
+    public GroupChatCreateResponseDTO createGroupChatRoom(GroupChatCreateRequestDTO dto) {
+        // 중복 user 제거
+        Set<Long> uniqueParticipantIds = new HashSet<>(dto.getParticipantIds());
+
+        // user 수 유효성 검사 (본인 포함 최소 2명 이상)
+        if (uniqueParticipantIds.size() < 2) {
+            throw new IllegalArgumentException("그룹 채팅은 최소 2명 이상 참여해야 합니다.");
+        }
+
+        // 유효하지 않은 userId가 있는지 확인
+        List<User> participants = userRepository.findAllById(uniqueParticipantIds);
+        if (participants.size() != uniqueParticipantIds.size()) {
+            throw new IllegalArgumentException("참여자 중 유효하지 않은 유저가 포함되어 있습니다.");
+        }
+
+        // 채팅방 생성
+        ChatRoom chatRoom = ChatRoom.builder()
+                .chatRoomName(dto.getChatRoomName())
+                .chatRoomType("GROUP")
+                .build();
+        chatRoomRepository.save(chatRoom);
+
+        // 참여자 등록
+        for (User user : participants) {
+            ChatRoomParticipant participant = ChatRoomParticipant.builder()
+                    .chatRoom(chatRoom)
+                    .user(user)
+                    .joinedAt(LocalDateTime.now())
+                    .build();
+            chatRoomParticipantRepository.save(participant);
+        }
+
+        return new GroupChatCreateResponseDTO(chatRoom.getId());
+    }
 
     @Override
     @Transactional
@@ -127,7 +163,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             }
         }
     }
-
 
     private void createChatRoomNotifySetting(User participantUser, ChatRoom chatRoom) {
         NotificationSetting chatRoomNotifySetting = NotificationSetting.builder()

@@ -1,8 +1,6 @@
 package com.netand.chatsystem.chat.controller;
 
-import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
+import com.netand.chatsystem.chat.dto.*;
 import com.netand.chatsystem.chat.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +19,15 @@ public class ChatRoomController {
     @PostMapping("/dm")
     public Long createOrGetChatRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
         return chatRoomService.createOrGetDmRoom(dto);
+    }
+
+    // 그룹 채팅방 생성
+    @PostMapping("/group")
+    public ResponseEntity<GroupChatCreateResponseDTO> createGroupChatRoom(
+            @RequestBody GroupChatCreateRequestDTO dto
+    ) {
+        GroupChatCreateResponseDTO response = chatRoomService.createGroupChatRoom(dto);
+        return ResponseEntity.ok(response);
     }
 
     // 현재 유저 기준 참여한 DM 목록 조회
