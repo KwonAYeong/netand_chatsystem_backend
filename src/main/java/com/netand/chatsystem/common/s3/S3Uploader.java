@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Component
@@ -39,7 +41,9 @@ public class S3Uploader {
     }
 
     public void deleteFile(String fileUrl) {
-        String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-        amazonS3.deleteObject(s3Properties.getBucket(), fileName);
+        String encodedKey = fileUrl.substring(fileUrl.indexOf(".amazonaws.com/") + ".amazonaws.com/".length());
+        String decodedKey = URLDecoder.decode(encodedKey, StandardCharsets.UTF_8);  // 핵심
+        amazonS3.deleteObject(s3Properties.getBucket(), decodedKey);
     }
+
 }

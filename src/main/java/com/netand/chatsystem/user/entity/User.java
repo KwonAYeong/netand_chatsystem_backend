@@ -37,11 +37,16 @@ public class User extends BaseTimeEntity {
 
     private boolean isActive;
 
-    //==유저 프로필 변경 메서드==//
+    //==프로필 변경 메서드==//
     public void updateProfile(String name, String company, String position) {
         this.name = name;
         this.company = company;
         this.position = position;
+    }
+
+    //==프로필사진 변경 메서드==//
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
 }

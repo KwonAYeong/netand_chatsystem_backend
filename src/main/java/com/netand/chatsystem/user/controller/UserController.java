@@ -8,6 +8,7 @@ import com.netand.chatsystem.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/user")
@@ -33,5 +34,21 @@ public class UserController {
         return ResponseEntity.ok(resDTO);
     }
 
+    @PostMapping("/{userId}/profile-image")
+    public ResponseEntity<String> updateProfileImage(
+            @PathVariable Long userId,
+            @RequestPart("image")MultipartFile imageFile
+            ) {
+        String imgURL = userProfileService.updateProfileImage(userId, imageFile);
+        return ResponseEntity.ok(imgURL);
+    }
+
+    @DeleteMapping("/{userId}/profile-image")
+    public ResponseEntity<Void> deleteProfileImage(
+            @PathVariable Long userId
+    ) {
+        userProfileService.deleteProfileImage(userId);
+        return ResponseEntity.noContent().build();
+    }
 
 }
