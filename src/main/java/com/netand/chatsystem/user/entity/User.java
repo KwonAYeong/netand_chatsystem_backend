@@ -2,6 +2,7 @@ package com.netand.chatsystem.user.entity;
 
 import com.fasterxml.jackson.databind.ser.Serializers;
 import com.netand.chatsystem.common.BaseTimeEntity;
+import com.netand.chatsystem.user.dto.ProfileUpdateReqDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,5 +36,17 @@ public class User extends BaseTimeEntity {
     private String position;
 
     private boolean isActive;
+
+    //==프로필 변경 메서드==//
+    public void updateProfile(String name, String company, String position) {
+        this.name = name;
+        this.company = company;
+        this.position = position;
+    }
+
+    //==프로필사진 변경 메서드==//
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
 
 }
