@@ -18,6 +18,7 @@ public class ChatRoomController {
     // 1:1 채팅방 생성
     @PostMapping("/dm")
     public Long createOrGetChatRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
+
         return chatRoomService.createOrGetDmRoom(dto);
     }
 
@@ -27,12 +28,14 @@ public class ChatRoomController {
             @RequestBody GroupChatCreateRequestDTO dto
     ) {
         GroupChatCreateResponseDTO response = chatRoomService.createGroupChatRoom(dto);
+
         return ResponseEntity.ok(response);
     }
 
     // 현재 유저 기준 참여한 DM 목록 조회
     @GetMapping("/dm/list/{userId}")
     public List<ChatRoomListResponseDTO> getDmRooms(@PathVariable Long userId) {
+
         return chatRoomService.getDmRoomsByUserId(userId);
     }
 
@@ -42,6 +45,7 @@ public class ChatRoomController {
             @PathVariable Long userId
     ) {
         List<ChatRoomListResponseDTO> groupRooms = chatRoomService.getGroupRoomsByUserId(userId);
+
         return ResponseEntity.ok(groupRooms);
     }
 
@@ -49,6 +53,15 @@ public class ChatRoomController {
     @PatchMapping("/last-read-message")
     public ResponseEntity<Void> updateLastReadMessage(@RequestBody ChatLastReadUpdateRequestDTO dto) {
         chatRoomService.updateLastReadMessage(dto);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // 채팅방 나가기
+    @DeleteMapping("/{chatRoomId}/leave/{userId}")
+    public ResponseEntity<Void> leaveChatRoom(@PathVariable Long chatRoomId, @PathVariable Long userId) {
+        chatRoomService.leaveChatRoom(chatRoomId, userId);
+
         return ResponseEntity.noContent().build();
     }
 }

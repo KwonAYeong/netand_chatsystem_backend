@@ -16,4 +16,6 @@ public interface ChatRoomService {
 
     GroupChatCreateResponseDTO createGroupChatRoom(GroupChatCreateRequestDTO dto);
 
+    void leaveChatRoom(Long chatRoomId, Long userId);
+
 }

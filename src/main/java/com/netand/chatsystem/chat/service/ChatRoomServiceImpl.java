@@ -171,6 +171,28 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .toList();
     }
 
+    // 채팅방 나가기
+    @Override
+    @Transactional
+    public void leaveChatRoom(Long chatRoomId, Long userId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        // 참가자 삭제
+        chatRoomParticipantRepository.deleteByChatRoomIdAndUserId(chatRoomId, userId);
+
+        // 남은 인원 수 확인
+        int remaining = chatRoomParticipantRepository.countByChatRoomId(chatRoomId);
+        if (remaining == 0) {
+            // 알림 설정 삭제
+            notificationSettingRepository.deleteByChatRoomId(chatRoomId);
+
+            // 채팅방 삭제
+            chatRoomRepository.delete(chatRoom);
+        }
+    }
+
+
     @Override
     @Transactional
     public void updateLastReadMessage(ChatLastReadUpdateRequestDTO dto) {
