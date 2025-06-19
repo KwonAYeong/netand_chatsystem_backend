@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/chat")
@@ -24,9 +26,7 @@ public class ChatRoomController {
 
     // 그룹 채팅방 생성
     @PostMapping("/group")
-    public ResponseEntity<GroupChatCreateResponseDTO> createGroupChatRoom(
-            @RequestBody GroupChatCreateRequestDTO dto
-    ) {
+    public ResponseEntity<GroupChatCreateResponseDTO> createGroupChatRoom(@RequestBody GroupChatCreateRequestDTO dto) {
         GroupChatCreateResponseDTO response = chatRoomService.createGroupChatRoom(dto);
 
         return ResponseEntity.ok(response);
@@ -41,9 +41,7 @@ public class ChatRoomController {
 
     // 참여한 그룹 채팅 목록 조회
     @GetMapping("/group/list/{userId}")
-    public ResponseEntity<List<ChatRoomListResponseDTO>> getGroupChatRooms(
-            @PathVariable Long userId
-    ) {
+    public ResponseEntity<List<ChatRoomListResponseDTO>> getGroupChatRooms(@PathVariable Long userId) {
         List<ChatRoomListResponseDTO> groupRooms = chatRoomService.getGroupRoomsByUserId(userId);
 
         return ResponseEntity.ok(groupRooms);
@@ -64,5 +62,21 @@ public class ChatRoomController {
 
         return ResponseEntity.noContent().build();
     }
+
+    // 그룹채팅방 이름 변경
+    @PatchMapping("/{chatRoomId}/name")
+    public ResponseEntity<Map<String, String>> updateChatRoomName(
+            @PathVariable Long chatRoomId,
+            @RequestBody Map<String, String> request
+    ) {
+        String newName = request.get("newName");
+        chatRoomService.updateChatRoomName(chatRoomId, newName);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "채팅방 이름이 변경되었습니다.");
+        return ResponseEntity.ok(response);
+    }
+
+
 }
 

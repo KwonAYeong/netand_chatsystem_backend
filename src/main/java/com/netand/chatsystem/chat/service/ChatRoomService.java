@@ -18,4 +18,6 @@ public interface ChatRoomService {
 
     void leaveChatRoom(Long chatRoomId, Long userId);
 
+    void updateChatRoomName(Long chatRoomId, String newName);
+
 }

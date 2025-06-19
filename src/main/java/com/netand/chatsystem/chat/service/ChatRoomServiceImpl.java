@@ -192,6 +192,19 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }
     }
 
+    // 그룹채팅방 이름 변경
+    @Override
+    @Transactional
+    public void updateChatRoomName(Long chatRoomId, String newName) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        if (!"GROUP".equals(chatRoom.getChatRoomType())) {
+            throw new IllegalStateException("1:1 채팅방 이름은 변경할 수 없습니다.");
+        }
+
+        chatRoom.updateName(newName);
+    }
 
     @Override
     @Transactional
