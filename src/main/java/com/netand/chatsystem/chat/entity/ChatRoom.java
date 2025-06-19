@@ -26,8 +26,11 @@ public class ChatRoom extends BaseTimeEntity {
     @Column(nullable = false)
     private String chatRoomType;  // "DM", "GROUP"
 
-
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatRoomParticipant> participants = new ArrayList<>();
+
+    public void updateName(String newName) {
+        this.chatRoomName = newName;
+    }
 }
 

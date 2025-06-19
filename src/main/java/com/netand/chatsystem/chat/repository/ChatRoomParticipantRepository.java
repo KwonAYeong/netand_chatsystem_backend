@@ -14,6 +14,10 @@ import java.util.Optional;
 
 public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomParticipant, Long> {
 
+    int countByChatRoomId(Long chatRoomId);
+
+    void deleteByChatRoomIdAndUserId(Long chatRoomId, Long userId);
+
     List<ChatRoomParticipant> findByUserId(Long userId);
 
     List<ChatRoomParticipant> findByChatRoomId(Long chatroomId);

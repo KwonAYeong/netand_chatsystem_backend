@@ -1,8 +1,6 @@
 package com.netand.chatsystem.chat.service;
 
-import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
-import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
+import com.netand.chatsystem.chat.dto.*;
 import com.netand.chatsystem.chat.entity.ChatMessage;
 import com.netand.chatsystem.chat.entity.ChatRoom;
 import com.netand.chatsystem.chat.entity.ChatRoomParticipant;
@@ -19,7 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final UserRepository userRepository;
     private final NotificationSettingRepository notificationSettingRepository;
 
-    // 채팅방 생성
+    // 1:1 채팅방 생성
     @Override
     @Transactional
     public Long createOrGetDmRoom(ChatRoomCreateRequestDTO dto) {
@@ -67,7 +68,44 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return chatRoom.getId();
     }
 
+    // 그룹 채팅방 생성
+    @Override
+    public GroupChatCreateResponseDTO createGroupChatRoom(GroupChatCreateRequestDTO dto) {
+        // 중복 user 제거
+        Set<Long> uniqueParticipantIds = new HashSet<>(dto.getParticipantIds());
 
+        // user 수 유효성 검사 (본인 포함 최소 2명 이상)
+        if (uniqueParticipantIds.size() < 2) {
+            throw new IllegalArgumentException("그룹 채팅은 최소 2명 이상 참여해야 합니다.");
+        }
+
+        // 유효하지 않은 userId가 있는지 확인
+        List<User> participants = userRepository.findAllById(uniqueParticipantIds);
+        if (participants.size() != uniqueParticipantIds.size()) {
+            throw new IllegalArgumentException("참여자 중 유효하지 않은 유저가 포함되어 있습니다.");
+        }
+
+        // 채팅방 생성
+        ChatRoom chatRoom = ChatRoom.builder()
+                .chatRoomName(dto.getChatRoomName())
+                .chatRoomType("GROUP")
+                .build();
+        chatRoomRepository.save(chatRoom);
+
+        // 참여자 등록
+        for (User user : participants) {
+            ChatRoomParticipant participant = ChatRoomParticipant.builder()
+                    .chatRoom(chatRoom)
+                    .user(user)
+                    .joinedAt(LocalDateTime.now())
+                    .build();
+            chatRoomParticipantRepository.save(participant);
+        }
+
+        return new GroupChatCreateResponseDTO(chatRoom.getId());
+    }
+
+    // 1:1 채팅방 목록 조회
     @Override
     @Transactional
     public List<ChatRoomListResponseDTO> getDmRoomsByUserId(Long userId) {
@@ -105,6 +143,69 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }).toList();
     }
 
+    // 그룹 채팅방 목록 조회
+    @Override
+    public List<ChatRoomListResponseDTO> getGroupRoomsByUserId(Long userId) {
+        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUserId(userId);
+
+        return participants.stream()
+                .filter(p -> "GROUP".equals(p.getChatRoom().getChatRoomType()))
+                .map(p -> {
+                    ChatRoom room = p.getChatRoom();
+                    ChatMessage lastMessage = chatMessageRepository.findTopByChatRoomOrderByCreatedAtDesc(room);
+
+                    Long lastReadMessageId = p.getLastReadMessage() != null ? p.getLastReadMessage().getId() : 0L;
+                    long unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), lastReadMessageId);
+
+                    return ChatRoomListResponseDTO.builder()
+                            .chatRoomId(room.getId())
+                            .chatRoomName(room.getChatRoomName())
+                            .chatRoomType("GROUP")
+                            .receiverProfileImage(null) // 그룹 채팅은 프로필 이미지 X
+                            .lastMessage(lastMessage != null ? lastMessage.getContent() : "")
+                            .hasUnreadMessage(unreadCount > 0)
+                            .unreadMessageCount((int) unreadCount)
+                            .build();
+                })
+                .sorted(Comparator.comparing(ChatRoomListResponseDTO::getUnreadMessageCount).reversed())
+                .toList();
+    }
+
+    // 채팅방 나가기
+    @Override
+    @Transactional
+    public void leaveChatRoom(Long chatRoomId, Long userId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        // 참가자 삭제
+        chatRoomParticipantRepository.deleteByChatRoomIdAndUserId(chatRoomId, userId);
+
+        // 남은 인원 수 확인
+        int remaining = chatRoomParticipantRepository.countByChatRoomId(chatRoomId);
+        if (remaining == 0) {
+            // 알림 설정 삭제
+            notificationSettingRepository.deleteByChatRoomId(chatRoomId);
+
+            // 채팅방 삭제
+            chatRoomRepository.delete(chatRoom);
+        }
+    }
+
+    // 그룹채팅방 이름 변경
+    @Override
+    @Transactional
+    public void updateChatRoomName(Long chatRoomId, String newName) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        if (!"GROUP".equals(chatRoom.getChatRoomType())) {
+            throw new IllegalStateException("1:1 채팅방 이름은 변경할 수 없습니다.");
+        }
+
+        chatRoom.updateName(newName);
+    }
+
     @Override
     @Transactional
     public void updateLastReadMessage(ChatLastReadUpdateRequestDTO dto) {
@@ -127,7 +228,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             }
         }
     }
-
 
     private void createChatRoomNotifySetting(User participantUser, ChatRoom chatRoom) {
         NotificationSetting chatRoomNotifySetting = NotificationSetting.builder()

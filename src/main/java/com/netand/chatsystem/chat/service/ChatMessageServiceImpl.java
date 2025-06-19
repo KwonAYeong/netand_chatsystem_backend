@@ -37,7 +37,9 @@ public class ChatMessageServiceImpl implements ChatMessageService{
     @Override
     @Transactional
     public ChatMessageResponseDTO sendMessage(ChatMessageRequestDTO dto) {
+        
         ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
+
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
         User sender = userRepository.findById(dto.getSenderId())
