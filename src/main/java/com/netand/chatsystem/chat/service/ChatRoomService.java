@@ -10,6 +10,8 @@ public interface ChatRoomService {
 
     List<ChatRoomListResponseDTO> getDmRoomsByUserId(Long userId);
 
+    List<ChatRoomListResponseDTO> getGroupRoomsByUserId(Long userId);
+
     void updateLastReadMessage(ChatLastReadUpdateRequestDTO dto);
 
     GroupChatCreateResponseDTO createGroupChatRoom(GroupChatCreateRequestDTO dto);

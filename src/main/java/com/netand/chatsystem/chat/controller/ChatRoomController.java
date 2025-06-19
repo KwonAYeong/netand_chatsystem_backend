@@ -36,6 +36,15 @@ public class ChatRoomController {
         return chatRoomService.getDmRoomsByUserId(userId);
     }
 
+    // 참여한 그룹 채팅 목록 조회
+    @GetMapping("/group/list/{userId}")
+    public ResponseEntity<List<ChatRoomListResponseDTO>> getGroupChatRooms(
+            @PathVariable Long userId
+    ) {
+        List<ChatRoomListResponseDTO> groupRooms = chatRoomService.getGroupRoomsByUserId(userId);
+        return ResponseEntity.ok(groupRooms);
+    }
+
     // 사용자가 채팅방에 입장했을 때, 해당 채팅방의 마지막 메시지를 읽은 것으로 처리
     @PatchMapping("/last-read-message")
     public ResponseEntity<Void> updateLastReadMessage(@RequestBody ChatLastReadUpdateRequestDTO dto) {
