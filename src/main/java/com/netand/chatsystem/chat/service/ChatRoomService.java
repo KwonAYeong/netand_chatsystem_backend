@@ -20,4 +20,6 @@ public interface ChatRoomService {
 
     void updateChatRoomName(Long chatRoomId, String newName);
 
+    List<GroupChatParticipantDTO> getParticipants(Long userId);
+
 }
