@@ -74,8 +74,19 @@ public class ChatRoomController {
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "채팅방 이름이 변경되었습니다.");
+
         return ResponseEntity.ok(response);
     }
+
+    // 그룹채팅방 참여 인원 조회
+    @GetMapping("/{chatRoomId}/participants")
+    public ResponseEntity<List<GroupChatParticipantDTO>> getParticipants(@PathVariable Long chatRoomId) {
+        List<GroupChatParticipantDTO> participants = chatRoomService.getParticipants(chatRoomId);
+
+        return ResponseEntity.ok(participants);
+    }
+
+
 
 
 }

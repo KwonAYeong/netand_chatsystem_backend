@@ -206,6 +206,24 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         chatRoom.updateName(newName);
     }
 
+    // 그룹채팅방 참여 인원 조회
+    @Override
+    public List<GroupChatParticipantDTO> getParticipants(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByChatRoomId(chatRoomId);
+
+        return participants.stream()
+                .map(p -> new GroupChatParticipantDTO(
+                        p.getUser().getId(),
+                        p.getUser().getName(),
+                        p.getUser().getProfileImageUrl()
+                ))
+                .toList();
+    }
+
+
     @Override
     @Transactional
     public void updateLastReadMessage(ChatLastReadUpdateRequestDTO dto) {
