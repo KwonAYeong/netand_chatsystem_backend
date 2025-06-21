@@ -8,5 +8,5 @@ import java.util.List;
 public class GroupChatCreateRequestDTO {
 
     private String chatRoomName;
-    private List<Long> participantIds;
+    private List<String> participantEmails;
 }

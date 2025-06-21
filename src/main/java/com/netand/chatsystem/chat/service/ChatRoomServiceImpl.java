@@ -68,21 +68,21 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return chatRoom.getId();
     }
 
-    // 그룹 채팅방 생성
     @Override
+    @Transactional
     public GroupChatCreateResponseDTO createGroupChatRoom(GroupChatCreateRequestDTO dto) {
-        // 중복 user 제거
-        Set<Long> uniqueParticipantIds = new HashSet<>(dto.getParticipantIds());
+        // 중복 이메일 제거
+        Set<String> uniqueParticipantEmails = new HashSet<>(dto.getParticipantEmails());
 
-        // user 수 유효성 검사 (본인 포함 최소 2명 이상)
-        if (uniqueParticipantIds.size() < 2) {
+        // 참여자 수 유효성 검사 (최소 2명 이상)
+        if (uniqueParticipantEmails.size() < 2) {
             throw new IllegalArgumentException("그룹 채팅은 최소 2명 이상 참여해야 합니다.");
         }
 
-        // 유효하지 않은 userId가 있는지 확인
-        List<User> participants = userRepository.findAllById(uniqueParticipantIds);
-        if (participants.size() != uniqueParticipantIds.size()) {
-            throw new IllegalArgumentException("참여자 중 유효하지 않은 유저가 포함되어 있습니다.");
+        // 유효하지 않은 이메일이 포함되어 있는지 확인
+        List<User> participants = userRepository.findByEmailIn(uniqueParticipantEmails);
+        if (participants.size() != uniqueParticipantEmails.size()) {
+            throw new IllegalArgumentException("참여자 중 유효하지 않은 이메일이 포함되어 있습니다.");
         }
 
         // 채팅방 생성
@@ -104,6 +104,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         return new GroupChatCreateResponseDTO(chatRoom.getId());
     }
+
 
     // 1:1 채팅방 목록 조회
     @Override
