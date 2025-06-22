@@ -32,6 +32,16 @@ public class ChatRoomController {
         return ResponseEntity.ok(response);
     }
 
+    // 그룹채팅방에 사용자 초대
+    @PostMapping("/{chatRoomId}/invite")
+    public ResponseEntity<Void> inviteToGroup(
+            @PathVariable Long chatRoomId,
+            @RequestBody InviteToGroupChatRequestDTO dto) {
+        chatRoomService.inviteUsersToGroupChatRoom(chatRoomId, dto);
+        return ResponseEntity.ok().build();
+    }
+
+
     // 현재 유저 기준 참여한 DM 목록 조회
     @GetMapping("/dm/list/{userId}")
     public List<ChatRoomListResponseDTO> getDmRooms(@PathVariable Long userId) {
