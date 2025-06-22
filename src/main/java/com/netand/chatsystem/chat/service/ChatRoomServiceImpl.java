@@ -68,6 +68,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return chatRoom.getId();
     }
 
+    // 그룹 채팅방 생성
     @Override
     @Transactional
     public GroupChatCreateResponseDTO createGroupChatRoom(GroupChatCreateRequestDTO dto) {
@@ -104,6 +105,38 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         return new GroupChatCreateResponseDTO(chatRoom.getId());
     }
+
+    // 그룹채팅방에 사용자 초대
+    @Override
+    @Transactional
+    public void inviteUsersToGroupChatRoom(Long chatRoomId, InviteToGroupChatRequestDTO dto) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        if (!"GROUP".equals(chatRoom.getChatRoomType())) {
+            throw new IllegalStateException("해당 채팅방은 그룹 채팅방이 아닙니다.");
+        }
+
+        Set<String> inviteEmails = new HashSet<>(dto.getInviteEmails());
+        List<User> usersToInvite = userRepository.findByEmailIn(inviteEmails);
+
+        if (usersToInvite.size() != inviteEmails.size()) {
+            throw new IllegalArgumentException("유효하지 않은 이메일이 포함되어 있습니다.");
+        }
+
+        List<Long> existingUserIds = chatRoomParticipantRepository.findUserIdsByChatRoomId(chatRoomId);
+        for (User user : usersToInvite) {
+            if (existingUserIds.contains(user.getId())) continue;
+
+            ChatRoomParticipant participant = ChatRoomParticipant.builder()
+                    .chatRoom(chatRoom)
+                    .user(user)
+                    .joinedAt(LocalDateTime.now())
+                    .build();
+            chatRoomParticipantRepository.save(participant);
+        }
+    }
+
 
 
     // 1:1 채팅방 목록 조회

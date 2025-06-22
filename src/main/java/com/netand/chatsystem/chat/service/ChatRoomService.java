@@ -22,4 +22,6 @@ public interface ChatRoomService {
 
     List<GroupChatParticipantDTO> getParticipants(Long userId);
 
+    void inviteUsersToGroupChatRoom(Long chatRoomId, InviteToGroupChatRequestDTO dto);
+
 }
