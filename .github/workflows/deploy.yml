@@ -41,8 +41,14 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         script: |
           echo "[1] 기존 서버 종료 중..."
-          pkill -f 'java -jar' || true
+          pkill -f 'java -jar' || echo "기존 서버가 이미 종료되어 있거나 실행 중이지 않음"
+    
+          echo "[2] 5초 대기 중..."
           sleep 5
-          echo "[2] 서버 재실행..."
+    
+          echo "[3] 서버 재시작 중..."
           nohup java -jar /home/ubuntu/app/backend/*.jar > /home/ubuntu/app/backend/log.out 2>&1 &
-          disown
+    
+          echo "[4] 실행 완료. 현재 프로세스 확인:"
+          ps -ef | grep java
+
