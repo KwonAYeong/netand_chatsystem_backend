@@ -47,10 +47,10 @@ jobs:
           sleep 5
 
           echo "[3] 서버 재시작 중..."
-          nohup java -jar /home/ubuntu/app/backend/*.jar > /home/ubuntu/app/backend/log.out 2>&1 &
+          nohup java -jar /home/ubuntu/app/backend/*.jar > /home/ubuntu/app/backend/log.out 2>&1 & disown
 
           echo "[4] 실행 완료. 현재 프로세스 확인:"
           ps -ef | grep java
 
-          # 실패 방지용 종료 코드
+          echo "[5] 종료 코드 방지용 처리"
           exit 0
