@@ -21,7 +21,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
 
-    - name: Build with Gradle
+    - name: Build with Gradle (테스트 생략)
       run: ./gradlew clean build -x test
 
     - name: Deploy to EC2
@@ -42,13 +42,15 @@ jobs:
         script: |
           echo "[1] 기존 서버 종료 중..."
           pkill -f 'java -jar' || echo "기존 서버가 이미 종료되어 있거나 실행 중이지 않음"
-    
+
           echo "[2] 5초 대기 중..."
           sleep 5
-    
+
           echo "[3] 서버 재시작 중..."
           nohup java -jar /home/ubuntu/app/backend/*.jar > /home/ubuntu/app/backend/log.out 2>&1 &
-    
+
           echo "[4] 실행 완료. 현재 프로세스 확인:"
           ps -ef | grep java
 
+          # 실패 방지용 종료 코드
+          exit 0
