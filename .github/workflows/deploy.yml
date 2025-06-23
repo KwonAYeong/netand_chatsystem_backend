@@ -35,6 +35,7 @@ jobs:
 
     - name: Restart Backend Server
       uses: appleboy/ssh-action@master
+      continue-on-error: true
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
@@ -51,6 +52,3 @@ jobs:
 
           echo "[4] 실행 완료. 현재 프로세스 확인:"
           ps -ef | grep java
-
-          echo "[5] 종료 코드 방지용 처리"
-          exit 0
