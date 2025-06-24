@@ -49,4 +49,9 @@ public class User extends BaseTimeEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
+    //==접속상태 변경 메서드==//
+    public void updateIsActive(boolean isActive) {
+        this.isActive = isActive;
+    }
+
 }

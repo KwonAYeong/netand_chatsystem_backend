@@ -1,5 +1,6 @@
 package com.netand.chatsystem.user.controller;
 
+import com.netand.chatsystem.common.websocket.UserSessionManager;
 import com.netand.chatsystem.user.dto.ProfileResDTO;
 import com.netand.chatsystem.user.dto.ProfileUpdateReqDTO;
 import com.netand.chatsystem.user.entity.User;
@@ -16,7 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
     private final UserProfileService userProfileService;
+    private final UserRepository userRepository;
+    private final UserSessionManager userSessionManager;
 
+    // 유저 프로필 조회
     @GetMapping("/{userId}")
     public ResponseEntity<ProfileResDTO> getUserProfile(
             @PathVariable Long userId
@@ -49,6 +53,23 @@ public class UserController {
     ) {
         userProfileService.deleteProfileImage(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    // 유저 접속 상태 api
+    // 웹 시작 시 초기 상태값 확인용
+    @GetMapping("/api/status/{userId}")
+    public ResponseEntity<String> getUserStatus(
+            @PathVariable Long userId
+    ) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    boolean isSettingOnline = user.isActive(); // 설정된 상태
+                    boolean isConnected = userSessionManager.isOnline(user.getId()); // 현재 접속 상태
+                    boolean shouldBeOnline = isSettingOnline && isConnected;
+                    return shouldBeOnline ? "ONLINE" : "AWAY";
+                })
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
 }
