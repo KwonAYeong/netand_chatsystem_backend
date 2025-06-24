@@ -1,5 +1,9 @@
 package com.netand.chatsystem.chat.service;
 
+import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
+import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
+import com.netand.chatsystem.chat.dto.ChatRoomCreateResponseDTO;
+import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
 import com.netand.chatsystem.chat.dto.*;
 import com.netand.chatsystem.chat.entity.ChatMessage;
 import com.netand.chatsystem.chat.entity.ChatRoom;
@@ -37,7 +41,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     // 1:1 채팅방 생성
     @Override
     @Transactional
-    public Long createOrGetDmRoom(ChatRoomCreateRequestDTO dto) {
+    public ChatRoomCreateResponseDTO createOrGetDmRoom(ChatRoomCreateRequestDTO dto) {
         User sender = userRepository.findById(dto.getSenderId())
                 .orElseThrow(() -> new IllegalArgumentException("보낸 사람 정보가 존재하지 않습니다."));
 
@@ -50,9 +54,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         ChatRoom existingRoom = chatRoomRepository.findExistingDmRoom(sender.getId(), receiver.getId());
         if (existingRoom != null) {
-            return existingRoom.getId();
+            return new ChatRoomCreateResponseDTO(existingRoom.getId(), false);
         }
 
+        // 채팅방 생성
         ChatRoom chatRoom = ChatRoom.builder()
                 .chatRoomName(receiver.getName())
                 .chatRoomType("DM")
@@ -63,11 +68,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         saveParticipantIfNotExists(chatRoom, sender);
         saveParticipantIfNotExists(chatRoom, receiver);
 
-        // 채팅방 알림설정 엔터티 생성
+        // 채팅방 알림설정 생성
         createChatRoomNotifySetting(sender, chatRoom);
         createChatRoomNotifySetting(receiver, chatRoom);
 
-        return chatRoom.getId();
+        return new ChatRoomCreateResponseDTO(chatRoom.getId(), true);
     }
 
     // 그룹 채팅방 생성

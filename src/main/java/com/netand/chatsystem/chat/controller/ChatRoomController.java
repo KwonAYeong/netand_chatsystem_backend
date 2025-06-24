@@ -1,5 +1,9 @@
 package com.netand.chatsystem.chat.controller;
 
+import com.netand.chatsystem.chat.dto.ChatLastReadUpdateRequestDTO;
+import com.netand.chatsystem.chat.dto.ChatRoomCreateRequestDTO;
+import com.netand.chatsystem.chat.dto.ChatRoomCreateResponseDTO;
+import com.netand.chatsystem.chat.dto.ChatRoomListResponseDTO;
 import com.netand.chatsystem.chat.dto.*;
 import com.netand.chatsystem.chat.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +23,10 @@ public class ChatRoomController {
 
     // 1:1 채팅방 생성
     @PostMapping("/dm")
-    public Long createOrGetChatRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
-
-        return chatRoomService.createOrGetDmRoom(dto);
+    public ResponseEntity<ChatRoomCreateResponseDTO> createOrGetChatRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
+        ChatRoomCreateResponseDTO response = chatRoomService.createOrGetDmRoom(dto);
+      
+        return ResponseEntity.ok(response);
     }
 
     // 그룹 채팅방 생성
