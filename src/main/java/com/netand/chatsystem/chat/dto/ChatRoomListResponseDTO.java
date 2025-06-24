@@ -14,4 +14,5 @@ public class ChatRoomListResponseDTO {
     private String lastMessage;
     private boolean hasUnreadMessage;
     private int unreadMessageCount;
+    private String receiverStatus; // 상대방 접속 상태
 }

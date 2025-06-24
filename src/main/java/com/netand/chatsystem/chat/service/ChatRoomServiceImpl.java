@@ -7,6 +7,7 @@ import com.netand.chatsystem.chat.entity.ChatRoomParticipant;
 import com.netand.chatsystem.chat.repository.ChatMessageRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomParticipantRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomRepository;
+import com.netand.chatsystem.common.websocket.UserSessionManager;
 import com.netand.chatsystem.setting.entity.NotificationSetting;
 import com.netand.chatsystem.setting.repository.NotificationSettingRepository;
 import com.netand.chatsystem.user.entity.User;
@@ -31,6 +32,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final UserRepository userRepository;
     private final NotificationSettingRepository notificationSettingRepository;
+    private final UserSessionManager userSessionManager;
 
     // 1:1 채팅방 생성
     @Override
@@ -132,6 +134,12 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     ? chatMessageRepository.countByChatRoomAndIdGreaterThanAndSenderNot(chatRoom, lastReadId, participant.getUser())
                     : 0;
 
+
+            // 사용자 접속상태값 분기처리
+            boolean isSettingOnline = opponent.isActive(); // DB 설정값
+            boolean isConnected = userSessionManager.isOnline(opponent.getId()); // 실시간 접속 상태값
+            String receiverStatus = (isSettingOnline && isConnected) ? "ONLINE" : "AWAY";
+
             return ChatRoomListResponseDTO.builder()
                     .chatRoomId(chatRoom.getId())
                     .chatRoomName(opponent.getName())
@@ -140,6 +148,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .lastMessage(lastMessage != null ? lastMessage.getContent() : "")
                     .hasUnreadMessage(unreadCount > 0)
                     .unreadMessageCount(unreadCount)
+                    .receiverStatus(receiverStatus)
                     .build();
         }).toList();
     }
