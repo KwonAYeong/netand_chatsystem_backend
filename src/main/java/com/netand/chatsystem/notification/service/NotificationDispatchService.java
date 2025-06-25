@@ -28,17 +28,46 @@ public class NotificationDispatchService {
             Long receiverId = participant.getUser().getId();
             if (receiverId.equals(senderId)) continue;
 
+            String message = generateNotificationMessage(messageDto);
+
             NotificationDTO dto = NotificationDTO.builder()
                     .chatRoomId(chatRoomId)
                     .senderId(senderId)
                     .senderName(messageDto.getSenderName())
-                    .message(messageDto.getContent())
+                    .message(message)
                     .createdAt(messageDto.getCreatedAt().toString())
                     .build();
 
             notificationService.sendNotification(receiverId, "chat", dto);
         }
     }
+
+    private String generateNotificationMessage(ChatMessageResponseDTO dto) {
+        String sender = dto.getSenderName();
+        String content = dto.getContent();
+        String messageType = dto.getMessageType();
+        String fileUrl = dto.getFileUrl();
+
+        if (messageType.equals("TEXT") && content != null && !content.isBlank()) {
+            return sender + ": " + content;
+        }
+
+        if (messageType.equals("FILE")) {
+            if (fileUrl != null && (fileUrl.endsWith(".jpg")
+                    || fileUrl.endsWith(".png")
+                    || fileUrl.endsWith(".jpeg")
+                    || fileUrl.endsWith(".gif")
+                )
+            ) {
+                return sender + "님이 이미지를 보냈습니다.";
+            } else {
+                return sender + "님이 파일을 보냈습니다.";
+            }
+        }
+
+        return sender + "님이 메시지를 보냈습니다.";
+    }
+
 
 
 }
