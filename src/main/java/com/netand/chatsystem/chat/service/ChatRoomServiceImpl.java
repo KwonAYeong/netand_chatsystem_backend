@@ -145,7 +145,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
 
-
     // 1:1 채팅방 목록 조회
     @Override
     @Transactional
