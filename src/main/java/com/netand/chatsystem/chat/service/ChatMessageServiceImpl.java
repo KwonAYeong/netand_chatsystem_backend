@@ -3,12 +3,11 @@ package com.netand.chatsystem.chat.service;
 import com.netand.chatsystem.chat.dto.ChatMessageRequestDTO;
 import com.netand.chatsystem.chat.dto.ChatMessageResponseDTO;
 import com.netand.chatsystem.chat.dto.UnreadCountDTO;
-import com.netand.chatsystem.chat.entity.ChatMessage;
-import com.netand.chatsystem.chat.entity.ChatRoom;
-import com.netand.chatsystem.chat.entity.ChatRoomParticipant;
+import com.netand.chatsystem.chat.entity.*;
 import com.netand.chatsystem.chat.repository.ChatMessageRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomParticipantRepository;
 import com.netand.chatsystem.chat.repository.ChatRoomRepository;
+import com.netand.chatsystem.chat.repository.MessageInteractionRepository;
 import com.netand.chatsystem.notification.service.NotificationDispatchService;
 import com.netand.chatsystem.notification.service.NotificationService;
 import com.netand.chatsystem.user.entity.User;
@@ -31,20 +30,20 @@ public class ChatMessageServiceImpl implements ChatMessageService{
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final UserRepository userRepository;
+    private final MessageInteractionRepository messageInteractionRepository;
     private final NotificationDispatchService notificationDispatchService;
 
     // 메세지 전송
     @Override
     @Transactional
     public ChatMessageResponseDTO sendMessage(ChatMessageRequestDTO dto) {
-        
-        ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
 
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+        // 채팅방, 보낸 사람 조회
+        ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId()).orElse(null);
+        User sender = userRepository.findById(dto.getSenderId()).orElse(null);
+        if (chatRoom == null || sender == null) return null;
 
-        User sender = userRepository.findById(dto.getSenderId())
-                .orElseThrow(() -> new IllegalArgumentException("보낸 사람을 찾을 수 없습니다."));
-
+        // 메세지 저장
         ChatMessage message = ChatMessage.builder()
                 .chatRoom(chatRoom)
                 .sender(sender)
@@ -52,26 +51,34 @@ public class ChatMessageServiceImpl implements ChatMessageService{
                 .messageType(dto.getMessageType())
                 .fileUrl(dto.getFileUrl())
                 .build();
-
         chatMessageRepository.save(message);
 
-        ChatMessageResponseDTO response = ChatMessageResponseDTO.builder()
-                .messageId(message.getId())
-                .chatRoomId(chatRoom.getId())
-                .senderId(sender.getId())
-                .senderName(sender.getName())
-                .senderProfileImage(sender.getProfileImageUrl())
-                .content(message.getContent())
-                .messageType(message.getMessageType())
-                .fileUrl(message.getFileUrl())
-                .createdAt(message.getCreatedAt())
-                .build();
+        // 멘션 처리 (mentionedUserNames가 있으면)
+        List<String> mentionedUserNames = dto.getMentionedUserNames();
+        if (mentionedUserNames != null && !mentionedUserNames.isEmpty()) {
+            for (String name : mentionedUserNames) {
+
+                User mentionedUser = userRepository.findByNameInChatRoom(name, chatRoom.getId()).orElse(null);
+                if (mentionedUser == null) continue;
+
+                MessageInteraction interaction = MessageInteraction.builder()
+                        .message(message)
+                        .user(mentionedUser)
+                        .interactionType(InteractionType.MENTION)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                messageInteractionRepository.save(interaction);
+            }
+        }
+
+        ChatMessageResponseDTO response = ChatMessageResponseDTO.from(message, mentionedUserNames);
 
         // SSE 알림 전송
         notificationDispatchService.sendChatNotification(response, chatRoom.getId(), sender.getId());
 
         return response;
     }
+
 
     // 채팅 메세지 목록 조회
     @Override
