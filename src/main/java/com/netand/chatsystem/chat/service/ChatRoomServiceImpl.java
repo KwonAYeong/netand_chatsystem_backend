@@ -179,6 +179,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
             return ChatRoomListResponseDTO.builder()
                     .chatRoomId(chatRoom.getId())
+                    .userId(opponent.getId())
                     .chatRoomName(opponent.getName())
                     .chatRoomType(chatRoom.getChatRoomType())
                     .receiverProfileImage(opponent.getProfileImageUrl())
