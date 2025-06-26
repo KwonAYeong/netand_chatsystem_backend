@@ -21,6 +21,8 @@ public class UserStatusController {
     public void handleAwayStatus(SimpMessageHeaderAccessor accessor) {
         Long userId = extractUserId(accessor);
 
+        // userId값 확인
+        System.out.println("UserStatusController.handleAwayStatus의 userId = " + userId);
         userSessionManager.setAway(userId);  // 메모리 상태 업데이트
 
         userRepository.findById(userId).ifPresent(user -> {
@@ -36,7 +38,8 @@ public class UserStatusController {
     @MessageMapping("/status/online")  // 클라이언트 → /pub/status/online
     public void handleOnlineStatus(SimpMessageHeaderAccessor accessor) {
         Long userId = extractUserId(accessor);
-
+        // userId값 확인
+        System.out.println("UserStatusController.handleOnlineStatus의 userId = " + userId);
         userSessionManager.setOnline(userId);  // 메모리 상태 업데이트
 
         userRepository.findById(userId).ifPresent(user -> {

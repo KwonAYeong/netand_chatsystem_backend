@@ -64,6 +64,7 @@ public class UserController {
         return userRepository.findById(userId)
                 .map(user -> {
                     boolean isSettingOnline = user.isActive(); // 설정된 상태
+                    System.out.println("UserController.getUserStatus");
                     boolean isConnected = userSessionManager.isOnline(user.getId()); // 현재 접속 상태
                     boolean shouldBeOnline = isSettingOnline && isConnected;
                     return shouldBeOnline ? "ONLINE" : "AWAY";

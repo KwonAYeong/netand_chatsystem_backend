@@ -1,7 +1,10 @@
 package com.netand.chatsystem.config;
 
+import com.netand.chatsystem.common.websocket.WebSocketConnectionInterceptor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.websocket.servlet.WebSocketMessagingAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -10,7 +13,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final WebSocketConnectionInterceptor webSocketConnectionInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -27,6 +33,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
         // 메세지를 보낼 prefix -> /pub/send
         registry.setApplicationDestinationPrefixes("/pub");
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(webSocketConnectionInterceptor);
     }
 
 }
