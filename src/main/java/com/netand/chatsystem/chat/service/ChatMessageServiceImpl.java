@@ -88,19 +88,20 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 
         return chatMessageRepository.findByChatRoomOrderByCreatedAtAsc(chatRoom)
                 .stream()
-                .map(msg -> ChatMessageResponseDTO.builder()
-                        .messageId(msg.getId())
-                        .chatRoomId(chatRoomId)
-                        .senderId(msg.getSender().getId())
-                        .senderName(msg.getSender().getName())
-                        .senderProfileImage(msg.getSender().getProfileImageUrl())
-                        .content(msg.getContent())
-                        .messageType(msg.getMessageType())
-                        .fileUrl(msg.getFileUrl())
-                        .createdAt(msg.getCreatedAt())
-                        .build())
+                .map(msg -> {
+
+                    List<MessageInteraction> mentions =
+                            messageInteractionRepository.findByMessageIdAndInteractionType(msg.getId(), InteractionType.MENTION);
+
+                    List<String> mentionedUserNames = mentions.stream()
+                            .map(m -> m.getUser().getName())
+                            .toList();
+
+                    return ChatMessageResponseDTO.from(msg, mentionedUserNames);
+                })
                 .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional
