@@ -54,7 +54,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         ChatRoom existingRoom = chatRoomRepository.findExistingDmRoom(sender.getId(), receiver.getId());
         if (existingRoom != null) {
-            return new ChatRoomCreateResponseDTO(existingRoom.getId(), false);
+            return new ChatRoomCreateResponseDTO(
+                    existingRoom.getId(),
+                    receiver.getId(),
+                    receiver.getName(),
+                    receiver.getProfileImageUrl(),
+                    false
+            );
         }
 
         // 채팅방 생성
@@ -72,8 +78,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         createChatRoomNotifySetting(sender, chatRoom);
         createChatRoomNotifySetting(receiver, chatRoom);
 
-        return new ChatRoomCreateResponseDTO(chatRoom.getId(), true);
+        return new ChatRoomCreateResponseDTO(
+                chatRoom.getId(),
+                receiver.getId(),
+                receiver.getName(),
+                receiver.getProfileImageUrl(),
+                true
+        );
     }
+
 
     // 그룹 채팅방 생성
     @Override
