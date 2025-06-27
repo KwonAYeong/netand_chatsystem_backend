@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Getter
@@ -19,7 +21,7 @@ public class ChatMessageResponseDTO {
     private String content;
     private String messageType;
     private String fileUrl;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
     private List<String> mentionedUserNames;
 
     // 멘션 있을 때
@@ -33,7 +35,7 @@ public class ChatMessageResponseDTO {
                 .content(message.getContent())
                 .messageType(message.getMessageType())
                 .fileUrl(message.getFileUrl())
-                .createdAt(message.getCreatedAt())
+                .createdAt(message.getCreatedAt().atOffset(ZoneOffset.ofHours(9)))
                 .mentionedUserNames(mentionedUserNames)
                 .build();
     }
