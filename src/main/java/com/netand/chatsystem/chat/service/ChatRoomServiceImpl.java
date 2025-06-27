@@ -174,6 +174,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
             // 사용자 접속상태값 분기처리
             boolean isSettingOnline = opponent.isActive(); // DB 설정값
+            System.out.println("ChatRoomServiceImpl.getDmRoomsByUserId");
             boolean isConnected = userSessionManager.isOnline(opponent.getId()); // 실시간 접속 상태값
             String receiverStatus = (isSettingOnline && isConnected) ? "ONLINE" : "AWAY";
 
