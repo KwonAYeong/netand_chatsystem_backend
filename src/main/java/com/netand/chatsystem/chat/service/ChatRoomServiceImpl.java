@@ -241,10 +241,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
         // 참가자 삭제
-        chatRoomParticipantRepository.deleteByChatRoomIdAndUserId(chatRoomId, userId);
+        ChatRoomParticipant participant = chatRoomParticipantRepository
+                .findWithLockByChatRoomIdAndUserId(chatRoomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("참여자가 존재하지 않습니다."));
+
+        participant.leave(); // leftAt = now()
+
 
         // 남은 인원 수 확인
-        int remaining = chatRoomParticipantRepository.countByChatRoomId(chatRoomId);
+        int remaining = chatRoomParticipantRepository.countByChatRoomIdAndLeftAtIsNull(chatRoomId);
         if (remaining == 0) {
             // 알림 설정 삭제
             notificationSettingRepository.deleteByChatRoomId(chatRoomId);
