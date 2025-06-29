@@ -208,7 +208,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     // 그룹 채팅방 목록 조회
     @Override
     public List<ChatRoomListResponseDTO> getGroupRoomsByUserId(Long userId) {
-        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUserId(userId);
+        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUserIdAndLeftAtIsNull(userId);
 
         return participants.stream()
                 .filter(p -> "GROUP".equals(p.getChatRoom().getChatRoomType()))
@@ -279,7 +279,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
-        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByChatRoomId(chatRoomId);
+        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByChatRoomIdAndLeftAtIsNull(chatRoomId);
 
         return participants.stream()
                 .map(p -> new GroupChatParticipantDTO(
