@@ -32,21 +32,19 @@ public class ChatRoomParticipant {
     @JoinColumn(name = "last_read_message_id")
     private ChatMessage lastReadMessage;
 
+    private LocalDateTime leftAt;
+
     private LocalDateTime joinedAt;
 
     private LocalDateTime updatedAt;
 
-    public void setLastReadMessage(ChatMessage lastReadMessage) {
-        this.lastReadMessage = lastReadMessage;
-    }
+    public void setLastReadMessage(ChatMessage lastReadMessage) { this.lastReadMessage = lastReadMessage;}
+
+    public void leave() { this.leftAt = LocalDateTime.now();}
 
     @PrePersist
-    protected void onCreate() {
-        this.joinedAt = this.updatedAt = LocalDateTime.now();
-    }
+    protected void onCreate() { this.joinedAt = this.updatedAt = LocalDateTime.now();}
 
     @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    protected void onUpdate() { this.updatedAt = LocalDateTime.now();}
 }
