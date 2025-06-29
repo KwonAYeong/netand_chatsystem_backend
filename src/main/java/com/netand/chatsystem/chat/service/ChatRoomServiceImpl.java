@@ -17,6 +17,8 @@ import com.netand.chatsystem.setting.repository.NotificationSettingRepository;
 import com.netand.chatsystem.user.entity.User;
 import com.netand.chatsystem.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.message.SimpleMessage;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final UserRepository userRepository;
     private final NotificationSettingRepository notificationSettingRepository;
     private final UserSessionManager userSessionManager;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 1:1 채팅방 생성
     @Override
@@ -77,6 +80,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         // 채팅방 알림설정 생성
         createChatRoomNotifySetting(sender, chatRoom);
         createChatRoomNotifySetting(receiver, chatRoom);
+
+        // receiver에게 채팅방 리스트 갱신 트리거 전송
+        messagingTemplate.convertAndSend("/sub/chatroom/list/" + receiver.getId(), "REFRESH");
 
         return new ChatRoomCreateResponseDTO(
                 chatRoom.getId(),
@@ -123,8 +129,14 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             chatRoomParticipantRepository.save(participant);
         }
 
+        // 모든 참여자에게 채팅방 리스트 갱신 트리거 전송
+        for (User user : participants) {
+            messagingTemplate.convertAndSend("/sub/chatroom/list/" + user.getId(), "REFRESH");
+        }
+
         return new GroupChatCreateResponseDTO(chatRoom.getId());
     }
+
 
     // 그룹채팅방에 사용자 초대
     @Override
@@ -154,6 +166,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .joinedAt(LocalDateTime.now())
                     .build();
             chatRoomParticipantRepository.save(participant);
+
+            // 실시간 채팅방 리스트 갱신 요청
+            messagingTemplate.convertAndSend("/sub/chatroom/list/" + user.getId(), "REFRESH");
         }
     }
 
@@ -233,7 +248,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .toList();
     }
 
-    // 채팅방 나가기
+    // 그룹 채팅방 나가기
     @Override
     @Transactional
     public void leaveChatRoom(Long chatRoomId, Long userId) {
@@ -247,6 +262,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         participant.leave(); // leftAt = now()
 
+        // 채팅방 나간 유저에게 채팅방 리스트 갱신 트리거 전송
+        messagingTemplate.convertAndSend("/sub/chatroom/list/" + userId, "REFRESH");
 
         // 남은 인원 수 확인
         int remaining = chatRoomParticipantRepository.countByChatRoomIdAndLeftAtIsNull(chatRoomId);
@@ -271,6 +288,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }
 
         chatRoom.updateName(newName);
+
+        List<ChatRoomParticipant> participants = chatRoomParticipantRepository
+                .findByChatRoomIdAndLeftAtIsNull(chatRoomId);
+
+        for (ChatRoomParticipant participant : participants) {
+            messagingTemplate.convertAndSend("/sub/chatroom/list/" + participant.getUser().getId(), "REFRESH");
+        }
     }
 
     // 그룹채팅방 참여 인원 조회
