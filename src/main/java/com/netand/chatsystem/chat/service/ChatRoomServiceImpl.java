@@ -261,8 +261,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .orElseThrow(() -> new IllegalArgumentException("참여자가 존재하지 않습니다."));
 
         participant.leave(); // leftAt = now()
+        chatRoomParticipantRepository.save(participant);
 
-        // 채팅방 나간 유저에게 채팅방 리스트 갱신 트리거 전송
+        // 나간 유저에게 채팅방 리스트 갱신 트리거 전송
         messagingTemplate.convertAndSend("/sub/chatroom/list/" + userId, "REFRESH");
 
         // 남은 인원 수 확인
@@ -275,6 +276,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             chatRoomRepository.delete(chatRoom);
         }
     }
+
 
     // 그룹채팅방 이름 변경
     @Override
