@@ -28,7 +28,7 @@ public class ChatRoomParticipant {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_read_message_id")
     private ChatMessage lastReadMessage;
 
