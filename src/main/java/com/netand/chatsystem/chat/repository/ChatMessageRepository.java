@@ -22,7 +22,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     long countByChatRoomIdAndIdGreaterThan(Long chatRoomId, Long messageId);
 
     @Query(value = """
-    SELECT c.* 
+    SELECT c.*\s
     FROM chat_message c
     INNER JOIN message_interaction i ON c.id = i.message_id
     WHERE i.user_id = :userId

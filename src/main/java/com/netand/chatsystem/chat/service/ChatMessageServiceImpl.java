@@ -74,7 +74,7 @@ public class ChatMessageServiceImpl implements ChatMessageService{
         ChatMessageResponseDTO response = ChatMessageResponseDTO.from(message, mentionedUserNames);
 
         // SSE 알림 전송
-        notificationDispatchService.sendChatNotification(response, chatRoom.getId(), sender.getId());
+        notificationDispatchService.sendChatNotification(response);
 
         return response;
     }
