@@ -7,4 +7,5 @@ public class ChatLastReadUpdateRequestDTO {
 
     private Long userId;
     private Long chatRoomId;
+    private Long lastReadMessageId;
 }
