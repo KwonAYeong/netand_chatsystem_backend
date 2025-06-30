@@ -24,10 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -156,21 +153,37 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new IllegalArgumentException("유효하지 않은 이메일이 포함되어 있습니다.");
         }
 
-        List<Long> existingUserIds = chatRoomParticipantRepository.findUserIdsByChatRoomId(chatRoomId);
         for (User user : usersToInvite) {
-            if (existingUserIds.contains(user.getId())) continue;
+            Optional<ChatRoomParticipant> existing = chatRoomParticipantRepository
+                    .findByChatRoomIdAndUserId(chatRoomId, user.getId());
 
-            ChatRoomParticipant participant = ChatRoomParticipant.builder()
-                    .chatRoom(chatRoom)
-                    .user(user)
-                    .joinedAt(LocalDateTime.now())
-                    .build();
-            chatRoomParticipantRepository.save(participant);
+            if (existing.isPresent()) {
+                ChatRoomParticipant participant = existing.get();
+                if (participant.getLeftAt() == null) {
+                    // 이미 참여 중인 사용자 → 초대 생략
+                    continue;
+                }
+
+                // 퇴장했던 사용자 재참여 처리
+                participant.setLeftAt(null);
+                participant.setJoinedAt(LocalDateTime.now());
+                chatRoomParticipantRepository.save(participant);
+
+            } else {
+                // 새로운 사용자 신규 참여자 등록
+                ChatRoomParticipant newParticipant = ChatRoomParticipant.builder()
+                        .chatRoom(chatRoom)
+                        .user(user)
+                        .joinedAt(LocalDateTime.now())
+                        .build();
+                chatRoomParticipantRepository.save(newParticipant);
+            }
 
             // 실시간 채팅방 리스트 갱신 요청
             messagingTemplate.convertAndSend("/sub/chatroom/list/" + user.getId(), "REFRESH");
         }
     }
+
 
 
     // 1:1 채팅방 목록 조회
@@ -255,27 +268,35 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
-        // 참가자 삭제
         ChatRoomParticipant participant = chatRoomParticipantRepository
                 .findWithLockByChatRoomIdAndUserId(chatRoomId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("참여자가 존재하지 않습니다."));
 
-        participant.leave(); // leftAt = now()
+        participant.leave();
         chatRoomParticipantRepository.save(participant);
 
-        // 나간 유저에게 채팅방 리스트 갱신 트리거 전송
+        // 나간 사용자에게 채팅방 리스트 리프레시
         messagingTemplate.convertAndSend("/sub/chatroom/list/" + userId, "REFRESH");
 
-        // 남은 인원 수 확인
+        // 남은 유저 수 확인
         int remaining = chatRoomParticipantRepository.countByChatRoomIdAndLeftAtIsNull(chatRoomId);
         if (remaining == 0) {
-            // 알림 설정 삭제
             notificationSettingRepository.deleteByChatRoomId(chatRoomId);
-
-            // 채팅방 삭제
             chatRoomRepository.delete(chatRoom);
+        } else {
+            // 남은 참여자들에게도 채팅방 리스트 리프레시
+            List<ChatRoomParticipant> others = chatRoomParticipantRepository
+                    .findByChatRoomIdAndLeftAtIsNull(chatRoomId)
+                    .stream()
+                    .filter(p -> !p.getUser().getId().equals(userId))
+                    .toList();
+
+            for (ChatRoomParticipant other : others) {
+                messagingTemplate.convertAndSend("/sub/chatroom/list/" + other.getUser().getId(), "REFRESH");
+            }
         }
     }
+
 
 
     // 그룹채팅방 이름 변경

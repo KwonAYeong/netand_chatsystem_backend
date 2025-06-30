@@ -33,6 +33,9 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
     Optional<ChatRoomParticipant> findWithLockByChatRoomIdAndUserId(@Param("chatRoomId") Long chatRoomId,
                                                                     @Param("userId") Long userId);
 
+    @Query("SELECT p FROM ChatRoomParticipant p WHERE p.chatRoom.id = :chatRoomId AND p.user.id = :userId")
+    Optional<ChatRoomParticipant> findByChatRoomIdAndUserId(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
+
     @Query("SELECT crp.user.id FROM ChatRoomParticipant crp WHERE crp.chatRoom.id = :chatRoomId")
     List<Long> findUserIdsByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
