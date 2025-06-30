@@ -53,12 +53,15 @@ public class ChatMessageServiceImpl implements ChatMessageService{
                 .build();
         chatMessageRepository.save(message);
 
-        // ✅ 메시지를 보낸 사람이 읽은 것으로 간주하여 lastReadMessage 갱신
         ChatRoomParticipant participant = chatRoomParticipantRepository
                 .findWithLockByChatRoomIdAndUserId(chatRoom.getId(), sender.getId())
                 .orElseThrow(() -> new IllegalArgumentException("채팅방 참여자를 찾을 수 없습니다."));
-        participant.setLastReadMessage(message);
-        chatRoomParticipantRepository.save(participant);
+
+        ChatMessage current = participant.getLastReadMessage();
+        if (current == null || message.getId() > current.getId()) {
+            participant.setLastReadMessage(message);
+            chatRoomParticipantRepository.save(participant);
+        }
 
         // 멘션 처리 (mentionedUserNames가 있으면)
         List<String> mentionedUserNames = dto.getMentionedUserNames();
@@ -85,6 +88,7 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 
         return response;
     }
+
 
 
 
