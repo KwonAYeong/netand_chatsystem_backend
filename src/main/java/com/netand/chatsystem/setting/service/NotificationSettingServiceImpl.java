@@ -1,5 +1,6 @@
 package com.netand.chatsystem.setting.service;
 
+import com.netand.chatsystem.chat.entity.ChatRoom;
 import com.netand.chatsystem.setting.dto.*;
 import com.netand.chatsystem.setting.entity.NotificationSetting;
 import com.netand.chatsystem.setting.repository.NotificationSettingRepository;
@@ -78,6 +79,18 @@ public class NotificationSettingServiceImpl implements NotificationSettingServic
         return RoomNotifySetResponseDTO.builder()
                 .alertType(setting.getAlertType())
                 .build();
+    }
+
+    @Override
+    public void createNotifySetting(User participantUser, ChatRoom chatRoom) {
+        NotificationSetting chatRoomNotifySetting = NotificationSetting.builder()
+                .user(participantUser)
+                .chatRoom(chatRoom)
+                .alertType("ALL")
+                .notificationStartTime(LocalTime.of(8, 0))
+                .notificationEndTime(LocalTime.of(22, 0))
+                .build();
+        notificationSettingRepository.save(chatRoomNotifySetting);
     }
 
     // 채팅방 알림 설정 변경

@@ -1,5 +1,6 @@
 package com.netand.chatsystem.setting.service;
 
+import com.netand.chatsystem.chat.entity.ChatRoom;
 import com.netand.chatsystem.setting.dto.*;
 import com.netand.chatsystem.user.entity.User;
 
@@ -9,4 +10,6 @@ public interface NotificationSettingService {
     NotificationSettingResponseDTO updateChatRoomNotification(RoomNotifySetRequestDTO dto);
     NotificationSettingResponseDTO getNotificationSetting(Long userId);
     RoomNotifySetResponseDTO getRoomNotifySetting(Long userId, Long chatRoomId);
+
+    void createNotifySetting(User participantUser, ChatRoom chatRoom);
 }

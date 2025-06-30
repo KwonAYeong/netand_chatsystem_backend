@@ -14,6 +14,7 @@ import com.netand.chatsystem.chat.repository.ChatRoomRepository;
 import com.netand.chatsystem.common.websocket.UserSessionManager;
 import com.netand.chatsystem.setting.entity.NotificationSetting;
 import com.netand.chatsystem.setting.repository.NotificationSettingRepository;
+import com.netand.chatsystem.setting.service.NotificationSettingService;
 import com.netand.chatsystem.user.entity.User;
 import com.netand.chatsystem.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final NotificationSettingRepository notificationSettingRepository;
     private final UserSessionManager userSessionManager;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationSettingService notificationSettingService;
 
     // 1:1 채팅방 생성
     @Override
@@ -75,8 +77,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         saveParticipantIfNotExists(chatRoom, receiver);
 
         // 채팅방 알림설정 생성
-        createChatRoomNotifySetting(sender, chatRoom);
-        createChatRoomNotifySetting(receiver, chatRoom);
+        notificationSettingService.createNotifySetting(receiver, chatRoom);
+        notificationSettingService.createNotifySetting(sender, chatRoom);
 
         // receiver에게 채팅방 리스트 갱신 트리거 전송
         messagingTemplate.convertAndSend("/sub/chatroom/list/" + receiver.getId(), "REFRESH");
@@ -124,6 +126,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .joinedAt(LocalDateTime.now())
                     .build();
             chatRoomParticipantRepository.save(participant);
+            // 채팅방 알림 설정 생성
+            notificationSettingService.createNotifySetting(user, chatRoom);
         }
 
         messagingTemplate.convertAndSend("/sub/chatroom/participants/" + chatRoom.getId(), "REFETCH");
