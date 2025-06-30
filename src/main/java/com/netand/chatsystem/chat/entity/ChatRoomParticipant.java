@@ -28,7 +28,7 @@ public class ChatRoomParticipant {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_read_message_id")
     private ChatMessage lastReadMessage;
 
@@ -41,6 +41,10 @@ public class ChatRoomParticipant {
     public void setLastReadMessage(ChatMessage lastReadMessage) { this.lastReadMessage = lastReadMessage;}
 
     public void leave() { this.leftAt = LocalDateTime.now();}
+
+    public void setLeftAt(LocalDateTime leftAt) { this.leftAt = leftAt;}
+
+    public void setJoinedAt(LocalDateTime joinedAt) { this.joinedAt = joinedAt;}
 
     @PrePersist
     protected void onCreate() { this.joinedAt = this.updatedAt = LocalDateTime.now();}
