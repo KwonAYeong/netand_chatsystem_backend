@@ -184,6 +184,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                         .joinedAt(LocalDateTime.now())
                         .build();
                 chatRoomParticipantRepository.save(newParticipant);
+                notificationSettingService.createNotifySetting(user, chatRoom);
             }
 
             // 실시간 채팅방 리스트 갱신 요청
