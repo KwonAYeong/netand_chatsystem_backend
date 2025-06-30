@@ -126,9 +126,12 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             chatRoomParticipantRepository.save(participant);
         }
 
+        messagingTemplate.convertAndSend("/sub/chatroom/participants/" + chatRoom.getId(), "REFETCH");
+
         // 모든 참여자에게 채팅방 리스트 갱신 트리거 전송
         for (User user : participants) {
             messagingTemplate.convertAndSend("/sub/chatroom/list/" + user.getId(), "REFRESH");
+
         }
 
         return new GroupChatCreateResponseDTO(chatRoom.getId());
@@ -181,6 +184,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
             // 실시간 채팅방 리스트 갱신 요청
             messagingTemplate.convertAndSend("/sub/chatroom/list/" + user.getId(), "REFRESH");
+
+            messagingTemplate.convertAndSend("/sub/chatroom/participants/" + chatRoomId, "REFETCH");
+
         }
     }
 
@@ -294,6 +300,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             for (ChatRoomParticipant other : others) {
                 messagingTemplate.convertAndSend("/sub/chatroom/list/" + other.getUser().getId(), "REFRESH");
             }
+
+            messagingTemplate.convertAndSend("/sub/chatroom/participants/" + chatRoomId, "REFETCH");
         }
     }
 
@@ -350,16 +358,25 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .findWithLockByChatRoomIdAndUserId(chatRoom.getId(), user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("참여자를 찾을 수 없습니다."));
 
-        ChatMessage lastMessage = chatMessageRepository
-                .findTopByChatRoomOrderByCreatedAtDesc(chatRoom);
+        ChatMessage lastMessage = null;
+
+        if (dto.getLastReadMessageId() != null) {
+            lastMessage = chatMessageRepository.findById(dto.getLastReadMessageId())
+                    .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
+        } else {
+            lastMessage = chatMessageRepository.findTopByChatRoomOrderByCreatedAtDesc(chatRoom);
+        }
 
         if (lastMessage != null) {
             ChatMessage current = participant.getLastReadMessage();
             if (current == null || current.getId() < lastMessage.getId()) {
                 participant.setLastReadMessage(lastMessage);
+
+                chatRoomParticipantRepository.save(participant);
             }
         }
     }
+
 
     private void createChatRoomNotifySetting(User participantUser, ChatRoom chatRoom) {
         NotificationSetting chatRoomNotifySetting = NotificationSetting.builder()
