@@ -21,26 +21,26 @@ public class NotificationDispatchService {
     /**
      * 수신자에 메시지 알림 전송
      */
-    public void sendChatNotification(ChatMessageResponseDTO messageDto) {
+    public void sendChatNotification(ChatMessageResponseDTO messageDto, List<Long> mentionedUserIds) {
         List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByChatRoomId(messageDto.getChatRoomId());
 
         for (ChatRoomParticipant participant : participants) {
             Long receiverId = participant.getUser().getId();
             if (receiverId.equals(messageDto.getSenderId())) continue;
 
-            String message = generateNotificationMessage(messageDto);
-
             NotificationDTO dto = NotificationDTO.builder()
                     .chatRoomId(messageDto.getChatRoomId())
                     .senderId(messageDto.getSenderId())
                     .senderName(messageDto.getSenderName())
-                    .message(message)
+                    .message(generateNotificationMessage(messageDto))
                     .createdAt(messageDto.getCreatedAt().toString())
+                    .mentionedUserIds(mentionedUserIds) 
                     .build();
 
             notificationService.sendNotification(receiverId, "chat", dto);
         }
     }
+
 
     private String generateNotificationMessage(ChatMessageResponseDTO dto) {
         String sender = dto.getSenderName();

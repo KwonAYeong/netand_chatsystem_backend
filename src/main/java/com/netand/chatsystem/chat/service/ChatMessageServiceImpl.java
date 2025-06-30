@@ -65,6 +65,7 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 
         // 멘션 처리 (mentionedUserNames가 있으면)
         List<String> mentionedUserNames = dto.getMentionedUserNames();
+        List<Long> mentionedUserIds = new ArrayList<>();
         if (mentionedUserNames != null && !mentionedUserNames.isEmpty()) {
             for (String name : mentionedUserNames) {
 
@@ -78,13 +79,16 @@ public class ChatMessageServiceImpl implements ChatMessageService{
                         .createdAt(LocalDateTime.now())
                         .build();
                 messageInteractionRepository.save(interaction);
+
+                // 맨션된 유저 아이디 수집
+                mentionedUserIds.add(mentionedUser.getId());
             }
         }
 
         ChatMessageResponseDTO response = ChatMessageResponseDTO.from(message, mentionedUserNames);
 
         // SSE 알림 전송
-        notificationDispatchService.sendChatNotification(response);
+        notificationDispatchService.sendChatNotification(response, mentionedUserIds);
 
         return response;
     }
