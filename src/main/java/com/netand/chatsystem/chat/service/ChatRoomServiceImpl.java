@@ -24,10 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -156,21 +153,37 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new IllegalArgumentException("유효하지 않은 이메일이 포함되어 있습니다.");
         }
 
-        List<Long> existingUserIds = chatRoomParticipantRepository.findUserIdsByChatRoomId(chatRoomId);
         for (User user : usersToInvite) {
-            if (existingUserIds.contains(user.getId())) continue;
+            Optional<ChatRoomParticipant> existing = chatRoomParticipantRepository
+                    .findByChatRoomIdAndUserId(chatRoomId, user.getId());
 
-            ChatRoomParticipant participant = ChatRoomParticipant.builder()
-                    .chatRoom(chatRoom)
-                    .user(user)
-                    .joinedAt(LocalDateTime.now())
-                    .build();
-            chatRoomParticipantRepository.save(participant);
+            if (existing.isPresent()) {
+                ChatRoomParticipant participant = existing.get();
+                if (participant.getLeftAt() == null) {
+                    // 이미 참여 중인 사용자 → 초대 생략
+                    continue;
+                }
+
+                // 퇴장했던 사용자 재참여 처리
+                participant.setLeftAt(null);
+                participant.setJoinedAt(LocalDateTime.now());
+                chatRoomParticipantRepository.save(participant);
+
+            } else {
+                // 새로운 사용자 신규 참여자 등록
+                ChatRoomParticipant newParticipant = ChatRoomParticipant.builder()
+                        .chatRoom(chatRoom)
+                        .user(user)
+                        .joinedAt(LocalDateTime.now())
+                        .build();
+                chatRoomParticipantRepository.save(newParticipant);
+            }
 
             // 실시간 채팅방 리스트 갱신 요청
             messagingTemplate.convertAndSend("/sub/chatroom/list/" + user.getId(), "REFRESH");
         }
     }
+
 
 
     // 1:1 채팅방 목록 조회

@@ -42,6 +42,10 @@ public class ChatRoomParticipant {
 
     public void leave() { this.leftAt = LocalDateTime.now();}
 
+    public void setLeftAt(LocalDateTime leftAt) { this.leftAt = leftAt;}
+
+    public void setJoinedAt(LocalDateTime joinedAt) { this.joinedAt = joinedAt;}
+
     @PrePersist
     protected void onCreate() { this.joinedAt = this.updatedAt = LocalDateTime.now();}
 
